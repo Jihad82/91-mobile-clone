@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from './Icon';
 
 interface HeroProps {
@@ -9,17 +9,70 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
   const [minPrice, setMinPrice] = useState(10000);
   const [maxPrice, setMaxPrice] = useState(50000);
   
-  // Calculate percentages for the visual slider (assuming max range of 200k for visualization)
+  // Slider Drag State
+  const [isDraggingMin, setIsDraggingMin] = useState(false);
+  const [isDraggingMax, setIsDraggingMax] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  
   const maxRange = 200000;
-  const leftPos = Math.min((minPrice / maxRange) * 100, 95) + '%';
-  const rightPos = Math.min((100 - (maxPrice / maxRange) * 100), 95) + '%';
+  const minGap = 1000;
+
+  // Handle Dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingMin && !isDraggingMax) return;
+      if (!sliderRef.current) return;
+
+      const rect = sliderRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      let newValue = Math.round((percentage / 100) * maxRange);
+      
+      // Snap to nearest 500
+      newValue = Math.round(newValue / 500) * 500;
+
+      if (isDraggingMin) {
+        if (newValue <= maxPrice - minGap) {
+          setMinPrice(newValue);
+        }
+      } else if (isDraggingMax) {
+        if (newValue >= minPrice + minGap) {
+          setMaxPrice(newValue);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingMin(false);
+      setIsDraggingMax(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    if (isDraggingMin || isDraggingMax) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'grabbing';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isDraggingMin, isDraggingMax, minPrice, maxPrice]);
+
+  // Calculate positions for rendering
+  const minPos = Math.min((minPrice / maxRange) * 100, 100);
+  const maxPos = Math.min((maxPrice / maxRange) * 100, 100);
 
   const handlePriceSearch = () => {
     onSearch({ minPrice, maxPrice });
   };
 
   const handleFeatureClick = (feature: string) => {
-    // Map features to potential keywords or just search the feature name
     onSearch({ keyword: feature });
   };
 
@@ -29,10 +82,6 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
         setMinPrice(0);
         setMaxPrice(amount);
         onSearch({ minPrice: 0, maxPrice: amount });
-    } else if (priceText.toLowerCase().includes('premium')) {
-        setMinPrice(50000);
-        setMaxPrice(500000);
-        onSearch({ minPrice: 50000, maxPrice: 500000 });
     }
   };
 
@@ -64,21 +113,35 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                         <span className="text-xs font-bold text-primary">₹{minPrice.toLocaleString()} - ₹{maxPrice.toLocaleString()}</span>
                     </div>
                     
-                    {/* Slider Visual */}
-                    <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full mb-2">
+                    {/* Interactive Slider */}
+                    <div 
+                        ref={sliderRef}
+                        className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 cursor-pointer select-none touch-none"
+                    >
+                        {/* Active Range Bar */}
                         <div 
-                            className="absolute h-full bg-gradient-to-r from-primary to-blue-600 rounded-full opacity-100 shadow-glow-sm"
-                            style={{ left: leftPos, right: rightPos }}
+                            className="absolute h-full bg-gradient-to-r from-primary to-blue-600 rounded-full opacity-100 shadow-glow-sm pointer-events-none"
+                            style={{ left: `${minPos}%`, width: `${maxPos - minPos}%` }}
                         ></div>
-                        {/* Visual Thumbs */}
+                        
+                        {/* Min Thumb */}
                         <div 
-                            className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md cursor-pointer hover:scale-125 transition-transform"
-                            style={{ left: leftPos }}
+                            className="absolute top-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md cursor-grab active:cursor-grabbing hover:scale-125 transition-transform z-10"
+                            style={{ left: `${minPos}%`, transform: 'translate(-50%, -50%)' }}
+                            onMouseDown={(e) => { e.stopPropagation(); setIsDraggingMin(true); }}
                         ></div>
+                        
+                        {/* Max Thumb */}
                         <div 
-                            className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md cursor-pointer hover:scale-125 transition-transform"
-                            style={{ right: rightPos }}
+                            className="absolute top-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md cursor-grab active:cursor-grabbing hover:scale-125 transition-transform z-10"
+                            style={{ left: `${maxPos}%`, transform: 'translate(-50%, -50%)' }}
+                            onMouseDown={(e) => { e.stopPropagation(); setIsDraggingMax(true); }}
                         ></div>
+                    </div>
+                    
+                    <div className="flex justify-between text-[10px] text-gray-400 font-medium px-1">
+                        <span>₹0</span>
+                        <span>₹2L+</span>
                     </div>
                  </div>
 
@@ -88,7 +151,10 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                     <input 
                         type="number" 
                         value={minPrice}
-                        onChange={(e) => setMinPrice(Number(e.target.value))}
+                        onChange={(e) => {
+                            const val = Math.min(Number(e.target.value), maxPrice - minGap);
+                            setMinPrice(val);
+                        }}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-6 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
                     </div>
@@ -98,7 +164,10 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                     <input 
                         type="number" 
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(Number(e.target.value))}
+                        onChange={(e) => {
+                             const val = Math.max(Number(e.target.value), minPrice + minGap);
+                             setMaxPrice(val);
+                        }}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-6 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
                     </div>
