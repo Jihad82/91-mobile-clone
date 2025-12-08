@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Product, NewsItem } from '../types';
+import { Product, NewsItem, Author, Category, Tag } from '../types';
 
 interface SearchCriteria {
   minPrice?: number;
@@ -10,25 +11,32 @@ interface SearchCriteria {
 interface DataContextType {
   upcomingPhones: Product[];
   popularPhones: Product[];
+  articles: NewsItem[]; // Consolidated Articles List
+  authors: Author[];
+  categories: Category[];
+  tags: Tag[];
+
+  // Getters for specific homepage sections (computed or filtered)
   latestNews: NewsItem[];
   hindiNews: NewsItem[];
   stories: NewsItem[];
-  compareList: Product[];
   
+  // CRUD
+  addArticle: (article: NewsItem) => void;
+  updateArticle: (article: NewsItem) => void;
+  deleteArticle: (id: string) => void;
+  
+  // Product CRUD
   addUpcomingPhone: (item: Product) => void;
   deleteUpcomingPhone: (id: string) => void;
-  
   addPopularPhone: (item: Product) => void;
   deletePopularPhone: (id: string) => void;
-  
-  addLatestNews: (item: NewsItem) => void;
-  deleteLatestNews: (id: string) => void;
-
-  addHindiNews: (item: NewsItem) => void;
-  deleteHindiNews: (id: string) => void;
+  updateProduct: (item: Product) => void; // Unified update
 
   searchProducts: (criteria: SearchCriteria) => Product[];
   
+  // Compare
+  compareList: Product[];
   addToCompare: (product: Product) => void;
   removeFromCompare: (id: string) => void;
   clearCompare: () => void;
@@ -36,66 +44,168 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initial Mock Data (Moved from App.tsx)
+// Initial Data
+const initialAuthors: Author[] = [
+  { id: '1', name: 'Kshitij Pujari', role: 'Senior Editor', avatar: 'https://placehold.co/100x100/333/FFF?text=KP', bio: 'Tech enthusiast with 10 years of experience.' },
+  { id: '2', name: 'Saloni Tandon', role: 'Associate Editor', avatar: 'https://placehold.co/100x100/444/FFF?text=ST' },
+  { id: '3', name: 'Ashish Kumar', role: 'Contributor', avatar: 'https://placehold.co/100x100/555/FFF?text=AK' },
+];
+
+const initialCategories: Category[] = [
+  { id: '1', name: 'News', slug: 'news', count: 120 },
+  { id: '2', name: 'Reviews', slug: 'reviews', count: 85 },
+  { id: '3', name: 'Comparison', slug: 'comparison', count: 40 },
+  { id: '4', name: 'Hindi', slug: 'hindi', count: 200 },
+  { id: '5', name: 'Buying Guide', slug: 'buying-guide', count: 30 },
+];
+
+const initialTags: Tag[] = [
+  { id: '1', name: '5G', slug: '5g' },
+  { id: '2', name: 'Samsung', slug: 'samsung' },
+  { id: '3', name: 'Apple', slug: 'apple' },
+  { id: '4', name: 'Launch', slug: 'launch' },
+];
+
+// Mock Articles with full content
+const initialArticles: NewsItem[] = [
+  { 
+    id: 'hero1', 
+    title: 'Samsung Galaxy S25 Ultra Review: The Android King Returns with AI Superpowers', 
+    slug: 'samsung-galaxy-s25-ultra-review',
+    subtitle: 'A stunning display, refined design, and Galaxy AI make this the phone to beat in 2025.',
+    image: 'https://placehold.co/1200x600/101010/FFF?text=Galaxy+S25+Ultra+Review',
+    heroImage: 'https://placehold.co/1200x600/101010/FFF?text=Galaxy+S25+Ultra+Review',
+    authorId: '1',
+    author: 'Kshitij Pujari',
+    publishedAt: new Date().toISOString(),
+    timeAgo: '4 Hours Ago',
+    rating: 4.5,
+    tags: ['Review', 'Flagship', 'Samsung'],
+    category: 'Reviews',
+    isMain: true,
+    isReview: true,
+    status: 'published',
+    content: `<p>The Samsung Galaxy S25 Ultra has arrived, and it's making a bold statement. With a refined titanium frame, the new Snapdragon 8 Gen 4 processor, and a suite of AI features that actually feel useful, Samsung is looking to reclaim its throne.</p><h2>Design & Display</h2><p>The flatter edges make it easier to hold, and the new anti-reflective coating on the 6.8-inch AMOLED panel is a game changer for outdoor visibility.</p><blockquote>"This is the best display we've ever tested on a smartphone."</blockquote><h2>Performance</h2><p>Benchmarks shatter records, but real-world usage is where it shines. Multitasking is seamless.</p>`,
+    pros: ['Stunning Display', 'S-Pen Integration', 'Top-tier Performance'],
+    cons: ['Expensive', 'Slow Charging']
+  },
+  { 
+    id: 'n1', 
+    title: "Motorola Edge 70 confirmed to launch in India as the brand's first ultra-slim phone", 
+    slug: 'motorola-edge-70-launch',
+    timeAgo: '29 Mins Ago', 
+    publishedAt: new Date().toISOString(),
+    image: 'https://placehold.co/800x400/png?text=Moto+Launch+Event', 
+    author: 'Saloni Tandon',
+    authorId: '2',
+    category: 'News',
+    status: 'published',
+    content: '<p>Motorola has officially teased the Edge 70. It promises to be the slimmest phone of 2025.</p>'
+  },
+  {
+    id: 'h1',
+    title: "OnePlus 15R इंडिया में 7400mAh बैटरी के साथ होगा लॉन्च, बनेगा भारत का पहला Snapdragon 8 Gen 5 वाला फोन",
+    slug: 'oneplus-15r-hindi',
+    timeAgo: '1 Hour Ago',
+    publishedAt: new Date().toISOString(),
+    image: 'https://placehold.co/800x400/png?text=Hindi+News',
+    author: 'Ashish Kumar',
+    authorId: '3',
+    category: 'Hindi',
+    status: 'published',
+    content: '<p>OnePlus भारत में अपना नया धमाकेदार फोन ला रहा है।</p>'
+  }
+];
+
+// Product Data
 const initialUpcoming: Product[] = [
-  { id: '1', name: 'Xiaomi Redmi K90 Pro Max', price: '₹75,999', image: 'https://placehold.co/200x250/png?text=Redmi+K90' },
-  { id: '2', name: 'Xiaomi 17 Pro Max', price: '₹109,999', image: 'https://placehold.co/200x250/png?text=Xiaomi+17' },
-  { id: '3', name: 'Vivo X300', price: '₹75,999', image: 'https://placehold.co/200x250/png?text=Vivo+X300', specScore: 98 },
-  { id: '4', name: 'Vivo X300 Pro', price: '₹109,999', image: 'https://placehold.co/200x250/png?text=Vivo+Pro', specScore: 97 },
-  { id: '5', name: 'Motorola Edge 70', price: '₹45,999', image: 'https://placehold.co/200x250/png?text=Moto+Edge', specScore: 88 },
-  { id: '6', name: 'Realme GT 9', price: '₹42,999', image: 'https://placehold.co/200x250/png?text=Realme', specScore: 92 },
+  { id: '1', name: 'Xiaomi Redmi K90 Pro Max', price: '₹75,999', image: 'https://placehold.co/200x250/png?text=Redmi+K90', brand: 'Xiaomi' },
+  { id: '2', name: 'Xiaomi 17 Pro Max', price: '₹109,999', image: 'https://placehold.co/200x250/png?text=Xiaomi+17', brand: 'Xiaomi' },
 ];
 
 const initialPopular: Product[] = [
-  { id: 'p1', name: 'OnePlus 15', price: '₹72,999', image: 'https://placehold.co/200x250/png?text=OnePlus', specScore: 98 },
-  { id: 'p2', name: 'iQOO 15', price: '₹72,999', image: 'https://placehold.co/200x250/png?text=iQOO', specScore: 96 },
-  { id: 'p3', name: 'Realme GT 8 Pro', price: '₹72,999', image: 'https://placehold.co/200x250/png?text=GT+8', specScore: 99 },
-  { id: 'p4', name: 'Lava Agni 4', price: '₹24,998', image: 'https://placehold.co/200x250/png?text=Lava', specScore: 90 },
-  { id: 'p5', name: 'Vivo V60e', price: '₹28,380', image: 'https://placehold.co/200x250/png?text=Vivo+V60', specScore: 87 },
-  { id: 'p6', name: 'Samsung Galaxy S25', price: '₹124,999', image: 'https://placehold.co/200x250/png?text=S25', specScore: 95 },
-  { id: 'p7', name: 'iPhone 16', price: '₹79,900', image: 'https://placehold.co/200x250/png?text=iPhone+16', specScore: 94 },
-  { id: 'p8', name: 'POCO F7', price: '₹29,999', image: 'https://placehold.co/200x250/png?text=POCO+F7', specScore: 89 },
-];
-
-const initialNews: NewsItem[] = [
-  { id: 'n1', title: "Motorola Edge 70 confirmed to launch in India as the brand's first ultra-slim phone", timeAgo: '29 Mins Ago', image: 'https://placehold.co/800x400/png?text=Moto+Launch+Event' },
-  { id: 'n2', title: "OnePlus 15R confirmed to feature a 7,400mAh battery with 80W fast charging support", timeAgo: '3 Hours Ago', image: 'https://placehold.co/200x150/png?text=Battery' },
-  { id: 'n3', title: "Nothing Phone (3a) Lite goes on sale in India today: price, features, specifications", timeAgo: '5 Hours Ago', image: 'https://placehold.co/200x150/png?text=Nothing' },
-  { id: 'n4', title: "Samsung Galaxy Tab A11 launches in India with an 8.7-inch display", timeAgo: '1 Day Ago', image: 'https://placehold.co/200x150/png?text=Samsung+Tab' },
-];
-
-const initialHindi: NewsItem[] = [
-  { id: 'h1', title: "OnePlus 15R इंडिया में 7400mAh बैटरी के साथ होगा लॉन्च, बनेगा भारत का पहला Snapdragon 8 Gen 5 वाला फोन", timeAgo: '1 Hour Ago', image: 'https://placehold.co/800x400/png?text=Hindi+News' },
-  { id: 'h2', title: "Motorola Edge 70 इंडिया लॉन्च कन्फर्म: पतला से भी पतला मोबाइल आ रहा है भारत!", timeAgo: '2 Hours Ago', image: 'https://placehold.co/200x150/png?text=Moto' },
-  { id: 'h3', title: "15 दिसंबर को पेश होंगे Vivo S50 और S50 Pro Mini, फ्रंट और बैक दोनों जगह मिलेंगे 50MP के कैमरे", timeAgo: '2 Hours Ago', image: 'https://placehold.co/200x150/png?text=Vivo' },
-  { id: 'h4', title: "949 रुपये का फोन हुआ लॉन्च, बड़े काम हैं फीचर्स और इस्तेमाल करना भी आसान", timeAgo: '1 Day Ago', image: 'https://placehold.co/200x150/png?text=Feature+Phone' },
-];
-
-const initialStories: NewsItem[] = [
-  { id: 's1', title: "iQOO 15's India price could be higher than iQOO 13, but buyers shouldn't be...", author: 'Saloni Tandon', timeAgo: '26 Days Ago', image: 'https://placehold.co/100x100/png?text=S1' },
-  { id: 's2', title: "Apple pushing iPhone Air 2 launch to 2027 to add a second rear camera: report", author: 'Saloni Tandon', timeAgo: '27 Days Ago', image: 'https://placehold.co/100x100/png?text=S2' },
-  { id: 's3', title: "iPhones satellite feature will reportedly allow maps and messages work without...", author: 'Ashish Kumar', timeAgo: '28 Days Ago', image: 'https://placehold.co/100x100/png?text=S3' },
+  { 
+    id: 'p1', 
+    name: 'OnePlus 15', 
+    price: '₹72,999', 
+    image: 'https://placehold.co/200x250/png?text=OnePlus', 
+    specScore: 98,
+    brand: 'OnePlus',
+    model: 'OnePlus 15 5G',
+    releaseDate: '2025, February 10',
+    status: 'Available',
+    highlights: [
+        { label: "Display", value: "6.8\" Fluid AMOLED" },
+        { label: "Processor", value: "Snapdragon 8 Gen 4" },
+        { label: "Camera", value: "50MP + 50MP + 64MP" },
+        { label: "Battery", value: "5400 mAh, 100W" },
+    ],
+    expertRatings: [
+        { label: 'Display', score: 95 },
+        { label: 'Performance', score: 98 },
+        { label: 'Camera', score: 92 },
+        { label: 'Battery', score: 90 },
+    ],
+    pros: ["Insane charging speed", "Great performance", "Vivid display"],
+    cons: ["No wireless charging", "Average ultra-wide camera"]
+  },
+  { 
+    id: 'p2', 
+    name: 'iQOO 15', 
+    price: '₹72,999', 
+    image: 'https://placehold.co/200x250/png?text=iQOO', 
+    specScore: 96,
+    brand: 'iQOO'
+  },
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [upcomingPhones, setUpcomingPhones] = useState<Product[]>(initialUpcoming);
   const [popularPhones, setPopularPhones] = useState<Product[]>(initialPopular);
-  const [latestNews, setLatestNews] = useState<NewsItem[]>(initialNews);
-  const [hindiNews, setHindiNews] = useState<NewsItem[]>(initialHindi);
-  const [stories] = useState<NewsItem[]>(initialStories);
+  const [articles, setArticles] = useState<NewsItem[]>(initialArticles);
+  const [authors] = useState<Author[]>(initialAuthors);
+  const [categories] = useState<Category[]>(initialCategories);
+  const [tags] = useState<Tag[]>(initialTags);
   const [compareList, setCompareList] = useState<Product[]>([]);
 
+  // Computed Properties
+  const latestNews = articles.filter(a => a.category !== 'Hindi' && a.status === 'published').slice(0, 10);
+  const hindiNews = articles.filter(a => a.category === 'Hindi' && a.status === 'published').slice(0, 5);
+  const stories = articles.filter(a => a.category === 'Stories' || a.category === 'Opinion').slice(0, 3);
+
+  // Article CRUD
+  const addArticle = (article: NewsItem) => {
+    setArticles([article, ...articles]);
+  };
+
+  const updateArticle = (updatedArticle: NewsItem) => {
+    setArticles(articles.map(a => a.id === updatedArticle.id ? updatedArticle : a));
+  };
+
+  const deleteArticle = (id: string) => {
+    setArticles(articles.filter(a => a.id !== id));
+  };
+
+  // Product CRUD
   const addUpcomingPhone = (item: Product) => setUpcomingPhones([...upcomingPhones, item]);
   const deleteUpcomingPhone = (id: string) => setUpcomingPhones(upcomingPhones.filter(p => p.id !== id));
-
   const addPopularPhone = (item: Product) => setPopularPhones([...popularPhones, item]);
   const deletePopularPhone = (id: string) => setPopularPhones(popularPhones.filter(p => p.id !== id));
-
-  const addLatestNews = (item: NewsItem) => setLatestNews([item, ...latestNews]);
-  const deleteLatestNews = (id: string) => setLatestNews(latestNews.filter(n => n.id !== id));
-
-  const addHindiNews = (item: NewsItem) => setHindiNews([item, ...hindiNews]);
-  const deleteHindiNews = (id: string) => setHindiNews(hindiNews.filter(n => n.id !== id));
+  
+  const updateProduct = (updatedProduct: Product) => {
+    // Try to find and update in upcoming
+    if (upcomingPhones.some(p => p.id === updatedProduct.id)) {
+        setUpcomingPhones(upcomingPhones.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        return;
+    }
+    // Try to find and update in popular
+    if (popularPhones.some(p => p.id === updatedProduct.id)) {
+        setPopularPhones(popularPhones.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        return;
+    }
+    // If not found, add to popular by default (or handle error)
+    setPopularPhones([...popularPhones, updatedProduct]);
+  };
 
   const parsePrice = (price: string) => {
     const num = parseInt(price.replace(/[^0-9]/g, ''), 10);
@@ -134,18 +244,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <DataContext.Provider value={{
       upcomingPhones,
       popularPhones,
+      articles,
+      authors,
+      categories,
+      tags,
       latestNews,
       hindiNews,
       stories,
       compareList,
+      addArticle,
+      updateArticle,
+      deleteArticle,
       addUpcomingPhone,
       deleteUpcomingPhone,
       addPopularPhone,
       deletePopularPhone,
-      addLatestNews,
-      deleteLatestNews,
-      addHindiNews,
-      deleteHindiNews,
+      updateProduct,
       searchProducts,
       addToCompare,
       removeFromCompare,

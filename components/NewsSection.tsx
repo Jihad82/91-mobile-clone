@@ -6,9 +6,10 @@ interface NewsSectionProps {
   title: string;
   news: NewsItem[];
   isHindi?: boolean;
+  onArticleClick?: (article: NewsItem) => void;
 }
 
-const NewsSection: React.FC<NewsSectionProps> = ({ title, news, isHindi = false }) => {
+const NewsSection: React.FC<NewsSectionProps> = ({ title, news, isHindi = false, onArticleClick }) => {
   if (!news || news.length === 0) {
     return (
       <section className="bg-white dark:bg-gray-950 py-10 mb-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -23,6 +24,12 @@ const NewsSection: React.FC<NewsSectionProps> = ({ title, news, isHindi = false 
 
   const mainStory = news[0];
   const sideStories = news.slice(1, 4);
+
+  const handleArticleClick = (item: NewsItem) => {
+    if (onArticleClick) {
+        onArticleClick(item);
+    }
+  };
 
   return (
     <section className="bg-white dark:bg-gray-950 py-10 mb-4 border-t border-gray-100 dark:border-gray-800 transition-colors duration-300">
@@ -45,7 +52,10 @@ const NewsSection: React.FC<NewsSectionProps> = ({ title, news, isHindi = false 
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Main Story */}
-          <div className="md:col-span-7 lg:col-span-8 group cursor-pointer h-full">
+          <div 
+            className="md:col-span-7 lg:col-span-8 group cursor-pointer h-full"
+            onClick={() => handleArticleClick(mainStory)}
+          >
             <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 h-full min-h-[350px]">
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
               <img src={mainStory.image} alt={mainStory.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out relative z-10" />
@@ -72,7 +82,11 @@ const NewsSection: React.FC<NewsSectionProps> = ({ title, news, isHindi = false 
           {/* Side Stories */}
           <div className="md:col-span-5 lg:col-span-4 flex flex-col gap-6 justify-between">
             {sideStories.map((item) => (
-              <div key={item.id} className="flex gap-5 group cursor-pointer items-start p-3 -mx-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <div 
+                key={item.id} 
+                className="flex gap-5 group cursor-pointer items-start p-3 -mx-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                onClick={() => handleArticleClick(item)}
+              >
                 <div className="overflow-hidden rounded-lg w-[110px] h-[80px] shrink-0 border border-gray-100 dark:border-gray-700 relative shadow-sm">
                   <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>

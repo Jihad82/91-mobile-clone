@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Product } from '../types';
 import { useData } from '../context/DataContext';
@@ -5,9 +6,10 @@ import { Icons } from './Icon';
 
 interface ProductCardProps {
   product: Product;
+  onClick?: (product: Product) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
   const { compareList, addToCompare, removeFromCompare } = useData();
   const isSelected = compareList.some(p => p.id === product.id);
 
@@ -21,8 +23,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
+  const handleCardClick = () => {
+    if (onClick) {
+        onClick(product);
+    }
+  };
+
   return (
-    <div className="w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-card-hover transition-all duration-300 cursor-pointer shrink-0 relative flex flex-col group hover:-translate-y-2">
+    <div 
+        className="w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-card-hover transition-all duration-300 cursor-pointer shrink-0 relative flex flex-col group hover:-translate-y-2"
+        onClick={handleCardClick}
+    >
       
       {/* Spec Score Badge - Authentic Style */}
       {product.specScore && (

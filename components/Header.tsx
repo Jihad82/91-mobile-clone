@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icon';
 
@@ -5,6 +6,7 @@ interface HeaderProps {
   darkMode: boolean;
   toggleDarkMode: () => void;
   onSearch: (criteria: { keyword: string }) => void;
+  onNavigate: (view: string) => void;
 }
 
 // Mega Menu Content Component for Mobiles & Tablets
@@ -87,9 +89,20 @@ const Top10MegaMenu = () => (
   </div>
 );
 
-const NavItem = ({ label, hasDropdown = true, isNew = false, children }: { label: string; hasDropdown?: boolean; isNew?: boolean; children?: React.ReactNode }) => (
+interface NavItemProps {
+  label: string;
+  hasDropdown?: boolean;
+  isNew?: boolean;
+  children?: React.ReactNode;
+  onClick?: () => void;
+}
+
+const NavItem = ({ label, hasDropdown = true, isNew = false, children, onClick }: NavItemProps) => (
   <div className="group relative flex items-center h-full">
-    <div className="flex items-center gap-1.5 px-3 py-3 cursor-pointer text-[13px] font-bold text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+    <div 
+      className="flex items-center gap-1.5 px-3 py-3 cursor-pointer text-[13px] font-bold text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+      onClick={onClick}
+    >
       {label}
       {hasDropdown && <Icons.ChevronDown size={14} className="text-gray-400 group-hover:text-primary transition-colors group-hover:rotate-180 duration-300" />}
       {isNew && <span className="absolute top-0 right-0 text-[9px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-sm shadow-sm animate-pulse-slow">NEW</span>}
@@ -107,7 +120,7 @@ const NavItem = ({ label, hasDropdown = true, isNew = false, children }: { label
   </div>
 );
 
-const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -138,7 +151,10 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch }) =
       <div className="container mx-auto max-w-[1200px] px-4">
         <div className="flex items-center justify-between h-16 py-2">
           {/* Logo */}
-          <div className="text-3xl font-black text-primary mr-8 tracking-tighter cursor-pointer flex items-center gap-1 hover:opacity-90 transition-opacity" onClick={() => window.location.reload()}>
+          <div 
+            className="text-3xl font-black text-primary mr-8 tracking-tighter cursor-pointer flex items-center gap-1 hover:opacity-90 transition-opacity" 
+            onClick={() => onNavigate('home')}
+          >
             91mobiles
           </div>
 
@@ -193,9 +209,10 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch }) =
           <NavItem label="Top 10">
             <Top10MegaMenu />
           </NavItem>
-          <NavItem label="Compare" />
+          {/* Changed Compare to navigate to new page */}
+          <NavItem label="Compare" onClick={() => onNavigate('compare')} hasDropdown={false} />
           <NavItem label="Upcoming Mobiles" />
-          <NavItem label="News & Reviews" />
+          <NavItem label="News & Reviews" onClick={() => onNavigate('news')} hasDropdown={false} isNew={true} />
           <NavItem label="Electronics" />
           <NavItem label="Laptops" />
           <NavItem label="TV" />
@@ -224,9 +241,9 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch }) =
                 <div className="flex flex-col gap-1">
                     <NavItem label="Mobiles & Tablets" />
                     <NavItem label="Top 10" />
-                    <NavItem label="Compare" />
+                    <NavItem label="Compare" onClick={() => { onNavigate('compare'); setIsMenuOpen(false); }} />
                     <NavItem label="Upcoming Mobiles" />
-                    <NavItem label="News & Reviews" />
+                    <NavItem label="News & Reviews" onClick={() => { onNavigate('news'); setIsMenuOpen(false); }} />
                 </div>
                 <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex flex-col">

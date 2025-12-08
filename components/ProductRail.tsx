@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
@@ -6,9 +7,10 @@ import { Icons } from './Icon';
 interface ProductRailProps {
   title: string;
   products: Product[];
+  onProductClick?: (product: Product) => void;
 }
 
-const ProductRail: React.FC<ProductRailProps> = ({ title, products }) => {
+const ProductRail: React.FC<ProductRailProps> = ({ title, products, onProductClick }) => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'default'>('default');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -82,7 +84,7 @@ const ProductRail: React.FC<ProductRailProps> = ({ title, products }) => {
         {/* Paginated Grid */}
         <div className="flex flex-wrap gap-5 justify-center sm:justify-start min-h-[340px] content-start">
           {currentProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onClick={onProductClick} />
           ))}
           {currentProducts.length === 0 && (
              <div className="w-full text-center py-10 text-gray-400">No products found.</div>

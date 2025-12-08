@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { 
   ChevronRight, 
@@ -26,7 +28,35 @@ import {
   TrendingUp,
   Clock,
   ArrowRight,
-  BarChart2
+  BarChart2,
+  Star,
+  Share2,
+  MessageCircle,
+  Tag,
+  Mail,
+  Rss,
+  Hash,
+  Flame,
+  Globe,
+  BookOpen,
+  Type,
+  Minimize2,
+  Maximize2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  ThumbsUp,
+  ThumbsDown,
+  PlayCircle,
+  Wifi,
+  HardDrive,
+  Layers,
+  Calendar,
+  Info,
+  Grid,
+  HelpCircle,
+  Send,
+  Edit
 } from 'lucide-react';
 
 export const Icons = {
@@ -56,5 +86,33 @@ export const Icons = {
   TrendingUp,
   Clock,
   ArrowRight,
-  BarChart2
+  BarChart2,
+  Star,
+  Share2,
+  MessageCircle,
+  Tag,
+  Mail,
+  Rss,
+  Hash,
+  Flame,
+  Globe,
+  BookOpen,
+  Type,
+  Minimize2,
+  Maximize2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  ThumbsUp,
+  ThumbsDown,
+  PlayCircle,
+  Wifi,
+  HardDrive,
+  Layers,
+  Calendar,
+  Info,
+  Grid,
+  HelpCircle,
+  Send,
+  Edit
 };

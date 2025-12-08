@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -9,36 +11,32 @@ import DeepDiveSection from './components/DeepDiveSection';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import CompareFloatBar from './components/CompareFloatBar';
+import NewsPage from './components/NewsPage';
+import ArticlePage from './components/ArticlePage';
+import ComparePage from './components/ComparePage';
+import ProductSpecsPage from './components/ProductSpecsPage';
 import { DataProvider, useData } from './context/DataContext';
 import { Icons } from './components/Icon';
-import { Product } from './types';
+import { Product, NewsItem } from './types';
 
-// Main Content Component that consumes Context
-const MainContent = () => {
-  const [darkMode, setDarkMode] = useState(false);
+// Home Content View
+const HomeView = ({ 
+    onArticleClick, 
+    onProductClick 
+  }: { 
+    onArticleClick: (article: NewsItem) => void,
+    onProductClick: (product: Product) => void
+  }) => {
   const { upcomingPhones, popularPhones, latestNews, hindiNews, stories, searchProducts } = useData();
   
   // Search State
   const [searchResults, setSearchResults] = useState<Product[] | null>(null);
   const [searchCriteria, setSearchCriteria] = useState<{ minPrice?: number, maxPrice?: number, keyword?: string } | null>(null);
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
   const handleSearch = (criteria: { minPrice?: number, maxPrice?: number, keyword?: string }) => {
     setSearchCriteria(criteria);
     const results = searchProducts(criteria);
     setSearchResults(results);
-    // Scroll to results
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -48,13 +46,9 @@ const MainContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-secondary bg-white dark:bg-gray-900 transition-colors duration-300 relative pb-20">
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} onSearch={handleSearch} />
-      
-      {/* Hero handles search input */}
+    <>
       <Hero onSearch={handleSearch} />
 
-      {/* Conditionally render content based on search */}
       {searchResults ? (
         <div className="container mx-auto max-w-[1200px] px-4 py-8 animate-fade-in">
              <div className="flex justify-between items-center mb-6">
@@ -74,38 +68,101 @@ const MainContent = () => {
                  </button>
              </div>
              
-             <ProductRail title="" products={searchResults} />
+             <ProductRail title="" products={searchResults} onProductClick={onProductClick} />
         </div>
       ) : (
         <>
           <BrandCarousel />
-          <ProductRail title="Upcoming Mobiles" products={upcomingPhones} />
-          <ProductRail title="Latest and Popular Mobiles" products={popularPhones} />
-          <NewsSection title="Latest News" news={latestNews} />
-          <NewsSection title="समाचार" news={hindiNews} isHindi={true} />
-          <StoriesSection stories={stories} />
+          <ProductRail title="Upcoming Mobiles" products={upcomingPhones} onProductClick={onProductClick} />
+          <ProductRail title="Latest and Popular Mobiles" products={popularPhones} onProductClick={onProductClick} />
+          <NewsSection title="Latest News" news={latestNews} onArticleClick={onArticleClick} />
+          <NewsSection title="समाचार" news={hindiNews} isHindi={true} onArticleClick={onArticleClick} />
+          <StoriesSection stories={stories} onArticleClick={onArticleClick} />
           <DeepDiveSection />
         </>
       )}
-
-      <Footer />
-      <CompareFloatBar />
-    </div>
+    </>
   );
 };
 
-// Root App Component handling View State
+// Root App Component
 function App() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'news' | 'article' | 'compare' | 'specs'>('home');
+  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const handleNavigate = (view: string) => {
+    if (view === 'home' || view === 'news' || view === 'compare') {
+      setCurrentView(view as any);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleArticleClick = (article: NewsItem) => {
+    setSelectedArticle(article);
+    setCurrentView('article');
+    window.scrollTo(0, 0);
+  };
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setCurrentView('specs');
+    window.scrollTo(0, 0);
+  };
+
+  const handleGlobalSearch = (criteria: { keyword: string }) => {
+    setCurrentView('home');
+  };
 
   return (
     <DataProvider>
       {isAdmin ? (
         <AdminDashboard onExit={() => setIsAdmin(false)} />
       ) : (
-        <>
-          <MainContent />
-          {/* Admin Floating Action Button */}
+        <div className="min-h-screen flex flex-col font-sans text-secondary bg-white dark:bg-gray-900 transition-colors duration-300 relative pb-20">
+          <Header 
+            darkMode={darkMode} 
+            toggleDarkMode={toggleDarkMode} 
+            onSearch={handleGlobalSearch}
+            onNavigate={handleNavigate}
+          />
+          
+          {currentView === 'home' && <HomeView onArticleClick={handleArticleClick} onProductClick={handleProductClick} />}
+          {currentView === 'news' && <NewsPage onArticleClick={handleArticleClick} />}
+          {currentView === 'compare' && <ComparePage />}
+          {currentView === 'article' && selectedArticle && (
+            <ArticlePage 
+              article={selectedArticle} 
+              onNavigate={handleNavigate} 
+              onArticleClick={handleArticleClick}
+            />
+          )}
+          {currentView === 'specs' && selectedProduct && (
+            <ProductSpecsPage 
+              product={selectedProduct} 
+              onNavigate={handleNavigate} 
+            />
+          )}
+
+          <Footer />
+          
+          {/* Hide Floating Bar on Compare Page to avoid redundancy */}
+          {currentView !== 'compare' && <CompareFloatBar />}
+
           <button 
             onClick={() => setIsAdmin(true)}
             className="fixed bottom-24 right-6 w-14 h-14 bg-gray-800 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-primary transition-all z-30 group border-2 border-white/20"
@@ -113,7 +170,7 @@ function App() {
           >
             <Icons.Settings className="group-hover:rotate-90 transition-transform duration-500" />
           </button>
-        </>
+        </div>
       )}
     </DataProvider>
   );
