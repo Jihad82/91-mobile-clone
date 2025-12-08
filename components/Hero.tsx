@@ -91,11 +91,11 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
       
       <div className="container mx-auto max-w-[1200px] px-4 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left: Price Finder Widget - Modern Glass Card */}
-          <div className="lg:col-span-4 pb-6 lg:pb-0">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
+          <div className="lg:col-span-4 h-full">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 border border-gray-100 dark:border-gray-800 relative overflow-hidden group h-full flex flex-col">
                {/* Header */}
                <div className="flex items-center gap-3 mb-6">
                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
@@ -106,7 +106,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                  </h2>
                </div>
               
-              <div className="space-y-6">
+              <div className="space-y-6 flex-1">
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price Range</span>
@@ -192,67 +192,125 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Center: Popular Features */}
-          <div className="lg:col-span-3 pb-6 lg:pb-0 mt-6 lg:mt-0 lg:border-r border-gray-100 dark:border-gray-800 pr-6">
-             <h3 className="text-xs font-bold text-gray-400 uppercase mb-5 tracking-widest flex items-center gap-2">
-                <Icons.TrendingUp size={14} className="text-primary"/> Popular Features
-             </h3>
-             <ul className="space-y-3">
-                {[
-                  { icon: <Icons.Smartphone size={18}/>, label: "5G Phones", keyword: "5G" },
-                  { icon: <Icons.Camera size={18}/>, label: "Best Camera Phones", keyword: "Camera" },
-                  { icon: <Icons.Battery size={18}/>, label: "5000mAh Battery", keyword: "Battery" },
-                  { icon: <Icons.Smartphone size={18}/>, label: "Upcoming Mobiles", keyword: "" },
-                  { icon: <Icons.Cpu size={18}/>, label: "Gaming Phones", keyword: "Pro" }, 
-                  { icon: <Icons.Tablet size={18}/>, label: "Best Tablets", keyword: "Tab" },
-                ].map((item, idx) => (
-                  <li 
-                    key={idx} 
-                    onClick={() => handleFeatureClick(item.keyword)}
-                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 hover:shadow-md cursor-pointer transition-all group border border-transparent hover:border-gray-100 dark:hover:border-gray-700"
-                  >
-                    <div className="text-gray-400 group-hover:text-primary transition-colors bg-gray-50 dark:bg-gray-800 group-hover:bg-primary/10 p-2 rounded-md">{item.icon}</div>
-                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">{item.label}</span>
-                  </li>
-                ))}
-             </ul>
-          </div>
+          {/* Right: Combined Explore Section */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+             
+             {/* Section Header */}
+             <div className="flex items-center gap-3 pb-2 border-b border-gray-100 dark:border-gray-800">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Icons.LayoutDashboard size={20} strokeWidth={2.5} />
+                </div>
+                <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
+                    Explore Features & Categories
+                </h2>
+             </div>
 
-          {/* Right: Categories & Price Tags */}
-          <div className="lg:col-span-5 lg:pl-4 mt-6 lg:mt-0">
-            <h2 className="text-lg font-bold mb-5 text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                Explore Categories
-            </h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {[
-                  { name: "Mobiles", icon: <Icons.Smartphone size={22} />, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-                  { name: "Laptops", icon: <Icons.Laptop size={22} />, color: "text-green-500", bg: "bg-green-50 dark:bg-green-900/20" },
-                  { name: "Tablets", icon: <Icons.Tablet size={22} />, color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
-                  { name: "TVs", icon: <Icons.Tv size={22} />, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" }
-              ].map((cat, idx) => (
-                  <div key={idx} onClick={() => onSearch({ keyword: cat.name })} className="flex items-center gap-3 border border-gray-200 dark:border-gray-700 p-4 rounded-xl hover:shadow-glow-sm hover:border-primary/50 cursor-pointer transition-all bg-white dark:bg-gray-800 group hover:-translate-y-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${cat.color} ${cat.bg} group-hover:scale-110 transition-transform`}>{cat.icon}</div>
-                    <div className="flex-1">
-                        <div className="text-sm font-bold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors">{cat.name}</div>
-                        <div className="text-[10px] text-gray-400 font-medium flex items-center mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0">Explore <Icons.ChevronRight size={10} className="ml-1"/></div>
+             {/* 1. Main Categories Grid */}
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               {[
+                  { name: "Mobiles", icon: <Icons.Smartphone />, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "hover:border-blue-200 dark:hover:border-blue-800" },
+                  { name: "Laptops", icon: <Icons.Laptop />, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20", borderColor: "hover:border-indigo-200 dark:hover:border-indigo-800" },
+                  { name: "Tablets", icon: <Icons.Tablet />, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", borderColor: "hover:border-emerald-200 dark:hover:border-emerald-800" },
+                  { name: "TVs", icon: <Icons.Tv />, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20", borderColor: "hover:border-rose-200 dark:hover:border-rose-800" }
+               ].map((cat, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => onSearch({ keyword: cat.name })}
+                    className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 cursor-pointer transition-all duration-300 hover:shadow-card-hover bg-white dark:bg-gray-900 group hover:-translate-y-1 ${cat.borderColor}`}
+                  >
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${cat.color} ${cat.bg} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        {React.cloneElement(cat.icon as React.ReactElement, { size: 26, strokeWidth: 2 })}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors">{cat.name}</span>
+                        <Icons.ChevronRight size={12} className="text-gray-300 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0" />
                     </div>
                   </div>
-              ))}
-            </div>
+               ))}
+             </div>
 
-            <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Mobiles by Price</h3>
-            <div className="flex flex-wrap gap-2">
-              {["Under ₹10,000", "Under ₹15,000", "Under ₹20,000", "Under ₹30,000"].map((price, idx) => (
-                <span 
-                    key={idx} 
-                    onClick={() => handlePriceTagClick(price)}
-                    className="bg-gray-50 dark:bg-gray-800 hover:bg-primary hover:text-white border border-gray-200 dark:border-gray-700 hover:border-primary px-4 py-2 text-xs font-bold rounded-full text-gray-600 dark:text-gray-300 cursor-pointer transition-all shadow-sm hover:shadow-md"
-                >
-                  {price}
-                </span>
-              ))}
-            </div>
+             {/* Split Section: Features & Budget */}
+             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
+                 
+                 {/* 2. Popular Features (Span 7) */}
+                 <div className="md:col-span-7 flex flex-col gap-4">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                        <Icons.TrendingUp size={16} className="text-primary"/> 
+                        <span>Trending Features</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                        { icon: <Icons.Smartphone />, label: "5G Mobiles", keyword: "5G", color: "text-blue-500" },
+                        { icon: <Icons.Camera />, label: "Best Camera", keyword: "Camera", color: "text-purple-500", badge: "Hot" },
+                        { icon: <Icons.Battery />, label: "Big Battery", keyword: "Battery", color: "text-green-500" },
+                        { icon: <Icons.Cpu />, label: "Gaming Pro", keyword: "Pro", color: "text-red-500" }, 
+                        { icon: <Icons.Clock />, label: "Upcoming", keyword: "", color: "text-orange-500", badge: "New" },
+                        { icon: <Icons.Tablet />, label: "Top Tablets", keyword: "Tab", color: "text-teal-500" },
+                        ].map((item, idx) => (
+                        <div 
+                            key={idx} 
+                            onClick={() => handleFeatureClick(item.keyword)}
+                            className="group relative p-0.5 rounded-xl cursor-pointer overflow-hidden transition-transform duration-300 hover:-translate-y-1"
+                        >
+                            {/* Gradient Border effect on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                            
+                            <div className="relative flex items-center gap-3 p-3 rounded-[11px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 group-hover:border-transparent h-full shadow-sm hover:shadow-md transition-all">
+                                <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800 ${item.color} group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-300`}>
+                                    {React.cloneElement(item.icon as React.ReactElement, { size: 16, strokeWidth: 2.5 })}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                    <span className="text-[12px] font-bold text-gray-700 dark:text-gray-200 group-hover:text-primary transition-colors truncate">
+                                        {item.label}
+                                    </span>
+                                    {item.badge && (
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-sm ${item.badge === 'Hot' ? 'bg-red-500 text-white shadow-red-200/50' : 'bg-blue-500 text-white shadow-blue-200/50'} shadow-sm uppercase tracking-wider shrink-0`}>
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                 </div>
+
+                 {/* 3. Shop By Budget (Span 5) */}
+                 <div className="md:col-span-5 flex flex-col gap-4">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                        <Icons.BarChart2 size={16} className="text-primary"/> 
+                        <span>Shop By Budget</span>
+                    </h3>
+                    
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 h-full">
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                "Under ₹10,000", "Under ₹15,000", "Under ₹20,000", "Under ₹25,000", "Under ₹30,000", "Premium (>30k)"
+                            ].map((price, idx) => (
+                                <span 
+                                    key={idx} 
+                                    onClick={() => handlePriceTagClick(price)}
+                                    className="grow text-center bg-white dark:bg-gray-800 hover:bg-primary hover:text-white border border-gray-200 dark:border-gray-700 hover:border-primary px-3 py-2 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-300 cursor-pointer transition-all shadow-sm hover:shadow-md"
+                                >
+                                {price}
+                                </span>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                             <div className="flex items-center justify-between group cursor-pointer">
+                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors">View Full Price List</span>
+                                <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                    <Icons.ChevronRight size={12}/>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                 </div>
+             </div>
           </div>
 
         </div>
