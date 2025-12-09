@@ -270,10 +270,8 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
           <NavItem label="Compare" onClick={() => onNavigate('compare')} hasDropdown={false} />
           <NavItem label="Upcoming Mobiles" />
           <NavItem label="News & Reviews" onClick={() => onNavigate('news')} hasDropdown={false} isNew={true} />
-          <NavItem label="Electronics" />
           <NavItem label="Laptops" />
           <NavItem label="TV" />
-          <NavItem label="More" />
         </nav>
 
         {/* Mobile Menu Overlay */}
