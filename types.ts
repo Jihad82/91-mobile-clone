@@ -14,6 +14,8 @@ export interface Author {
   role: string;
   avatar: string;
   bio?: string;
+  email?: string;
+  socials?: { twitter?: string; linkedin?: string };
 }
 
 export interface Category {
@@ -21,6 +23,7 @@ export interface Category {
   name: string;
   slug: string;
   count?: number;
+  type?: 'news' | 'product';
 }
 
 export interface Tag {
@@ -37,29 +40,39 @@ export interface ComparisonData {
 export interface NewsItem {
   id: string;
   title: string;
-  timeAgo: string; // Display string, derived from publishedAt
-  image: string;
-  author?: string; // Legacy string fallback
-  isMain?: boolean;
   subtitle?: string;
-  category?: string;
-  rating?: number;
-  tags?: string[];
-  readTime?: string;
-  // CMS Extended Fields
   slug?: string;
   content?: string; // HTML Body
+  image: string; // Hero Image
+  heroImage?: string; // Larger version if available
+  
+  // Metadata
+  authorId?: string;
+  author?: string; // Legacy fallback
+  category?: string; // ID or Name
+  tags?: string[];
+  
+  // Status & Timing
   status?: 'published' | 'draft' | 'scheduled';
   publishedAt?: string; // ISO Date
-  authorId?: string;
-  seoTitle?: string;
-  seoDescription?: string;
+  timeAgo?: string; // Derived display string
+  readTime?: string;
+  
+  // Flags
+  isMain?: boolean;
+  isTrending?: boolean;
   isReview?: boolean;
+  
+  // Review Specifics
+  rating?: number;
   pros?: string[];
   cons?: string[];
   comparisonData?: ComparisonData;
-  heroImage?: string; // Large hero for article page
   gallery?: string[];
+  
+  // SEO
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export interface ReviewItem {
@@ -81,8 +94,20 @@ export interface UserReview {
 }
 
 export interface Brand {
+  id: string;
   name: string;
-  logo: string; 
+  logo?: string; 
+  color?: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  image: string;
+  bg_color?: string;
+  text_color?: string;
+  link?: string;
 }
 
 export interface ProductImage {

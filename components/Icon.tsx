@@ -56,7 +56,30 @@ import {
   Grid,
   HelpCircle,
   Send,
-  Edit
+  Edit,
+  User,
+  List,
+  Filter,
+  // Editor Icons
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
+  Quote,
+  ListOrdered,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Youtube,
+  Video,
+  Heading1,
+  Heading2,
+  Heading3,
+  Link,
+  Unlink
 } from 'lucide-react';
 
 export const Icons = {
@@ -114,5 +137,28 @@ export const Icons = {
   Grid,
   HelpCircle,
   Send,
-  Edit
+  Edit,
+  User,
+  List,
+  Filter,
+  // Editor
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
+  Quote,
+  ListOrdered,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Youtube,
+  Video,
+  Heading1,
+  Heading2,
+  Heading3,
+  Link,
+  Unlink
 };

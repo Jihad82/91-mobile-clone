@@ -1,11 +1,12 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icon';
 
 interface HeaderProps {
   darkMode: boolean;
   toggleDarkMode: () => void;
-  onSearch: (criteria: { keyword: string }) => void;
+  onSearch: (criteria: { keyword: string; category?: string; minPrice?: number; maxPrice?: number }) => void;
   onNavigate: (view: string) => void;
 }
 
@@ -122,6 +123,8 @@ const NavItem = ({ label, hasDropdown = true, isNew = false, children, onClick }
 
 const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('all');
+  const [priceRange, setPriceRange] = useState('any');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -133,11 +136,27 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      onSearch({ keyword: searchTerm });
-      setIsMenuOpen(false);
+  const getPriceRange = (range: string) => {
+    switch(range) {
+        case '0-10000': return { min: 0, max: 10000 };
+        case '10000-20000': return { min: 10000, max: 20000 };
+        case '20000-30000': return { min: 20000, max: 30000 };
+        case '30000-50000': return { min: 30000, max: 50000 };
+        case '50000-500000': return { min: 50000, max: 500000 };
+        default: return { min: undefined, max: undefined };
     }
+  };
+
+  const handleSearch = () => {
+    const { min, max } = getPriceRange(priceRange);
+    onSearch({ 
+        keyword: searchTerm,
+        category: category === 'all' ? undefined : category,
+        minPrice: min,
+        maxPrice: max
+    });
+    // For mobile menu behavior
+    if (isMenuOpen) setIsMenuOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -152,28 +171,67 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
         <div className="flex items-center justify-between h-16 py-2">
           {/* Logo */}
           <div 
-            className="text-3xl font-black text-primary mr-8 tracking-tighter cursor-pointer flex items-center gap-1 hover:opacity-90 transition-opacity" 
+            className="text-3xl font-black text-primary mr-6 tracking-tighter cursor-pointer flex items-center gap-1 hover:opacity-90 transition-opacity" 
             onClick={() => onNavigate('home')}
           >
             91mobiles
           </div>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden lg:flex flex-1 max-w-xl relative mr-auto group">
-             <input 
-               type="text" 
-               placeholder="Search for a mobile, tablet, laptop..." 
-               className="w-full h-11 pl-5 pr-14 bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-full text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-gray-800 transition-all placeholder-gray-500 dark:placeholder-gray-400 text-gray-700 dark:text-gray-200 shadow-inner"
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               onKeyDown={handleKeyDown}
-             />
-             <div 
-                className="absolute right-1 top-1 h-9 w-9 flex items-center justify-center bg-primary rounded-full cursor-pointer hover:bg-primary-dark transition-all shadow-md group-hover:scale-105"
-                onClick={handleSearch}
-             >
-                <Icons.Search className="text-white" size={18} strokeWidth={2.5} />
-             </div>
+          <div className="hidden lg:flex flex-1 max-w-2xl relative mr-auto ml-2 group">
+              <div className="w-full h-11 flex items-center bg-gray-100/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-full shadow-inner focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary focus-within:bg-white dark:focus-within:bg-gray-800 transition-all">
+                  
+                  {/* Category Select */}
+                  <div className="relative h-full">
+                      <select 
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          className="h-full pl-4 pr-6 bg-transparent text-xs font-bold text-gray-600 dark:text-gray-300 outline-none border-r border-gray-300 dark:border-gray-700 cursor-pointer appearance-none hover:text-primary rounded-l-full"
+                      >
+                          <option value="all">All</option>
+                          <option value="mobile">Mobiles</option>
+                          <option value="laptop">Laptops</option>
+                          <option value="tablet">Tablets</option>
+                          <option value="tv">TVs</option>
+                      </select>
+                      <Icons.ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+
+                  {/* Price Select */}
+                  <div className="relative h-full">
+                      <select 
+                          value={priceRange}
+                          onChange={(e) => setPriceRange(e.target.value)}
+                          className="h-full pl-3 pr-6 bg-transparent text-xs font-bold text-gray-600 dark:text-gray-300 outline-none border-r border-gray-300 dark:border-gray-700 cursor-pointer appearance-none hover:text-primary w-[90px]"
+                      >
+                          <option value="any">Price</option>
+                          <option value="0-10000"> &lt; 10K</option>
+                          <option value="10000-20000">10-20K</option>
+                          <option value="20000-30000">20-30K</option>
+                          <option value="30000-50000">30-50K</option>
+                          <option value="50000-500000"> &gt; 50K</option>
+                      </select>
+                      <Icons.ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+
+                  {/* Input */}
+                  <input 
+                      type="text" 
+                      placeholder="Search..." 
+                      className="flex-1 h-full px-4 bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 outline-none"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                  />
+
+                  {/* Search Button */}
+                  <div 
+                      className="h-9 w-9 mr-1 flex items-center justify-center bg-primary rounded-full cursor-pointer hover:bg-primary-dark transition-all shadow-md hover:scale-105"
+                      onClick={handleSearch}
+                  >
+                      <Icons.Search className="text-white" size={18} strokeWidth={2.5} />
+                  </div>
+              </div>
           </div>
 
           {/* Actions */}
@@ -209,7 +267,6 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
           <NavItem label="Top 10">
             <Top10MegaMenu />
           </NavItem>
-          {/* Changed Compare to navigate to new page */}
           <NavItem label="Compare" onClick={() => onNavigate('compare')} hasDropdown={false} />
           <NavItem label="Upcoming Mobiles" />
           <NavItem label="News & Reviews" onClick={() => onNavigate('news')} hasDropdown={false} isNew={true} />
@@ -222,20 +279,33 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
             <div className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-xl p-4 flex flex-col gap-2 animate-fade-in z-50">
-                <div className="flex relative mb-4">
-                    <input 
-                       type="text" 
-                       placeholder="Search..." 
-                       className="w-full h-10 pl-4 pr-12 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:outline-none focus:border-primary text-gray-700 dark:text-gray-200"
-                       value={searchTerm}
-                       onChange={(e) => setSearchTerm(e.target.value)}
-                       onKeyDown={handleKeyDown}
-                    />
-                    <div 
-                        className="absolute right-0 top-0 h-full w-10 flex items-center justify-center bg-primary rounded-r-md cursor-pointer"
-                        onClick={handleSearch}
-                    >
-                        <Icons.Search className="text-white" size={18} />
+                <div className="flex flex-col gap-2 mb-4">
+                     <select 
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          className="w-full h-10 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm outline-none"
+                      >
+                          <option value="all">All Categories</option>
+                          <option value="mobile">Mobiles</option>
+                          <option value="laptop">Laptops</option>
+                          <option value="tablet">Tablets</option>
+                          <option value="tv">TVs</option>
+                      </select>
+                      <div className="flex relative">
+                        <input 
+                          type="text" 
+                          placeholder="Search..." 
+                          className="w-full h-10 pl-4 pr-12 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:outline-none focus:border-primary text-gray-700 dark:text-gray-200"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                        />
+                        <div 
+                            className="absolute right-0 top-0 h-full w-10 flex items-center justify-center bg-primary rounded-r-md cursor-pointer"
+                            onClick={handleSearch}
+                        >
+                            <Icons.Search className="text-white" size={18} />
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -248,7 +318,7 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
                 <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-primary">Login</span>
-                        <span className="text-[10px] text-gray-500">Sign Up</span>
+                        <span className="text-xs text-gray-500">Sign Up</span>
                     </div>
                 </div>
             </div>

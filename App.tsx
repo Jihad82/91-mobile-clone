@@ -15,25 +15,34 @@ import NewsPage from './components/NewsPage';
 import ArticlePage from './components/ArticlePage';
 import ComparePage from './components/ComparePage';
 import ProductSpecsPage from './components/ProductSpecsPage';
-import { DataProvider, useData } from './context/DataContext';
+import { DataProvider, useData, SearchCriteria } from './context/DataContext';
 import { Icons } from './components/Icon';
 import { Product, NewsItem } from './types';
 
 // Home Content View
 const HomeView = ({ 
     onArticleClick, 
-    onProductClick 
+    onProductClick,
+    externalSearch
   }: { 
     onArticleClick: (article: NewsItem) => void,
-    onProductClick: (product: Product) => void
+    onProductClick: (product: Product) => void,
+    externalSearch?: SearchCriteria | null
   }) => {
   const { upcomingPhones, popularPhones, latestNews, hindiNews, stories, searchProducts } = useData();
   
   // Search State
   const [searchResults, setSearchResults] = useState<Product[] | null>(null);
-  const [searchCriteria, setSearchCriteria] = useState<{ minPrice?: number, maxPrice?: number, keyword?: string } | null>(null);
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(null);
 
-  const handleSearch = (criteria: { minPrice?: number, maxPrice?: number, keyword?: string }) => {
+  // Effect to handle search from Header
+  useEffect(() => {
+    if (externalSearch) {
+        handleSearch(externalSearch);
+    }
+  }, [externalSearch]);
+
+  const handleSearch = (criteria: SearchCriteria) => {
     setSearchCriteria(criteria);
     const results = searchProducts(criteria);
     setSearchResults(results);
@@ -56,6 +65,7 @@ const HomeView = ({
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Search Results</h2>
                     <p className="text-sm text-gray-500 mt-1">
                         Found {searchResults.length} items 
+                        {searchCriteria?.category && ` • Category: ${searchCriteria.category}`}
                         {searchCriteria?.minPrice !== undefined && ` • Price: ₹${searchCriteria.minPrice} - ₹${searchCriteria.maxPrice}`}
                         {searchCriteria?.keyword && ` • Keyword: "${searchCriteria.keyword}"`}
                     </p>
@@ -92,6 +102,7 @@ function App() {
   const [currentView, setCurrentView] = useState<'home' | 'news' | 'article' | 'compare' | 'specs'>('home');
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [globalSearch, setGlobalSearch] = useState<SearchCriteria | null>(null);
 
   useEffect(() => {
     if (darkMode) {
@@ -124,7 +135,8 @@ function App() {
     window.scrollTo(0, 0);
   };
 
-  const handleGlobalSearch = (criteria: { keyword: string }) => {
+  const handleGlobalSearch = (criteria: SearchCriteria) => {
+    setGlobalSearch(criteria);
     setCurrentView('home');
   };
 
@@ -141,7 +153,13 @@ function App() {
             onNavigate={handleNavigate}
           />
           
-          {currentView === 'home' && <HomeView onArticleClick={handleArticleClick} onProductClick={handleProductClick} />}
+          {currentView === 'home' && (
+            <HomeView 
+                onArticleClick={handleArticleClick} 
+                onProductClick={handleProductClick} 
+                externalSearch={globalSearch}
+            />
+          )}
           {currentView === 'news' && <NewsPage onArticleClick={handleArticleClick} />}
           {currentView === 'compare' && <ComparePage />}
           {currentView === 'article' && selectedArticle && (

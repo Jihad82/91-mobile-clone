@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Icons } from './Icon';
 import { NewsItem } from '../types';
 import { useData } from '../context/DataContext';
@@ -15,34 +15,87 @@ interface NewsPageProps {
 }
 
 const NewsPage: React.FC<NewsPageProps> = ({ onArticleClick }) => {
-  const { articles, latestNews, tags } = useData();
+  const { articles, categories, tags, authors } = useData();
 
-  // Determine content dynamically
-  const heroArticle = articles.find(a => a.isMain) || latestNews[0];
-  const reviews = articles.filter(a => a.isReview || a.category === 'Reviews').slice(0, 3);
-  const smartphoneNews = articles.filter(a => a.tags?.includes('Mobile') || a.category === 'News').slice(0, 2);
-  const laptopNews = articles.filter(a => a.tags?.includes('Laptop') || a.tags?.includes('PC')).slice(0, 2);
+  // State for Filters & Sort
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeSort, setActiveSort] = useState<'latest' | 'trending' | 'views'>('latest');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
-  const trendingTopics = [
-    { rank: 1, title: 'OnePlus 13 Review' },
-    { rank: 2, title: 'Upcoming 5G Phones' },
-    { rank: 3, title: 'iOS 18 Features' },
-    { rank: 4, title: 'Nothing Phone 3' },
-    { rank: 5, title: 'Best Laptops for Students' },
-  ];
+  // Derived Data
+  const publishedArticles = useMemo(() => articles.filter(a => a.status === 'published'), [articles]);
+
+  const filteredArticles = useMemo(() => {
+    let result = publishedArticles;
+
+    // Filter by Category
+    if (activeCategory !== 'all') {
+      result = result.filter(a => a.category === activeCategory);
+    }
+
+    // Filter by Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(a => 
+        a.title.toLowerCase().includes(q) || 
+        a.subtitle?.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    if (activeSort === 'latest') {
+      result = result.sort((a,b) => new Date(b.publishedAt || '').getTime() - new Date(a.publishedAt || '').getTime());
+    } else if (activeSort === 'trending') {
+      result = result.sort((a,b) => (b.isTrending ? 1 : 0) - (a.isTrending ? 1 : 0));
+    }
+    // 'views' would require view count logic, keeping default for now
+    
+    return result;
+  }, [publishedArticles, activeCategory, searchQuery, activeSort]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
+  const currentItems = filteredArticles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const heroArticle = filteredArticles.find(a => a.isMain) || filteredArticles[0];
+  // Exclude hero from main list if it matches
+  const displayItems = currentItems.filter(a => a.id !== heroArticle?.id);
+
+  // Trending Sidebar Logic
+  const trendingArticles = useMemo(() => publishedArticles.filter(a => a.isTrending).slice(0, 5), [publishedArticles]);
 
   return (
     <div className="bg-white dark:bg-gray-950 min-h-screen pb-12 transition-colors duration-300">
       
-      {/* Breadcrumbs & Header Area */}
-      <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-4">
+      {/* Header Area */}
+      <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-6">
         <div className="container mx-auto max-w-[1200px] px-4">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                 <span className="hover:text-primary cursor-pointer">Home</span>
                 <Icons.ChevronRight size={10} />
                 <span className="text-primary">News & Reviews</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">Tech News & Reviews</h1>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">Tech News & Reviews</h1>
+                  <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">Latest gadgets, updates, and deep dives from the tech world.</p>
+                </div>
+                
+                {/* Search Bar */}
+                <div className="relative group w-full md:w-64">
+                    <Icons.Search className="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
+                    <input 
+                        type="text" 
+                        placeholder="Search news..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-primary outline-none transition-all shadow-sm"
+                    />
+                </div>
+            </div>
         </div>
       </div>
 
@@ -50,152 +103,147 @@ const NewsPage: React.FC<NewsPageProps> = ({ onArticleClick }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Main Content Column (Left) */}
-          <div className="lg:col-span-8 space-y-10">
+          <div className="lg:col-span-8">
             
-            {/* Hero Review Card */}
-            {heroArticle && (
+            {/* Filters & View Toggle */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button 
+                        onClick={() => setActiveCategory('all')} 
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeCategory === 'all' ? 'bg-primary text-white shadow-md shadow-primary/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
+                    >
+                        All News
+                    </button>
+                    {categories.map(c => (
+                        <button 
+                            key={c.id} 
+                            onClick={() => setActiveCategory(c.name)} 
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeCategory === c.name ? 'bg-primary text-white shadow-md shadow-primary/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
+                        >
+                            {c.name}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-3">
+                   <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                       <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-400'}`}><Icons.Grid size={16} /></button>
+                       <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-400'}`}><Icons.List size={16} /></button>
+                   </div>
+                   <select 
+                        value={activeSort} 
+                        onChange={(e) => setActiveSort(e.target.value as any)}
+                        className="bg-transparent text-xs font-bold text-gray-600 dark:text-gray-400 outline-none cursor-pointer"
+                   >
+                       <option value="latest">Latest First</option>
+                       <option value="trending">Trending</option>
+                       <option value="views">Most Viewed</option>
+                   </select>
+                </div>
+            </div>
+
+            {/* Hero Article (Only on first page) */}
+            {currentPage === 1 && heroArticle && !searchQuery && activeCategory === 'all' && (
                 <div 
-                    className="relative rounded-2xl overflow-hidden group shadow-2xl cursor-pointer"
+                    className="relative rounded-2xl overflow-hidden group shadow-xl cursor-pointer mb-10 h-[400px]"
                     onClick={() => onArticleClick(heroArticle)}
                 >
-                    <div className="absolute top-4 left-4 z-20 flex gap-2">
-                        <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-md uppercase shadow-lg">{heroArticle.category}</span>
-                        {heroArticle.rating && (
-                            <span className="bg-white/90 dark:bg-black/80 text-gray-900 dark:text-white text-xs font-bold px-3 py-1 rounded-md flex items-center gap-1 shadow-lg backdrop-blur-sm">
-                                <Icons.Star size={12} className="text-yellow-500 fill-yellow-500" /> {heroArticle.rating}/5
-                            </span>
-                        )}
-                    </div>
-                    <img src={heroArticle.heroImage || heroArticle.image} alt="Hero" className="w-full h-[400px] md:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                    <img src={heroArticle.heroImage || heroArticle.image} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                     
                     <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full z-20">
-                        <div className="flex items-center gap-2 text-gray-300 text-xs font-bold mb-3 uppercase tracking-wide">
-                            <span className="text-primary">{heroArticle.author}</span>
-                            <span>•</span>
-                            <span>{heroArticle.timeAgo}</span>
+                        <div className="flex items-center gap-3 mb-3">
+                           {heroArticle.isTrending && <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">TRENDING</span>}
+                           <span className="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide backdrop-blur-sm">{heroArticle.category}</span>
                         </div>
                         <h2 className="text-2xl md:text-4xl font-black text-white leading-tight mb-3 drop-shadow-md">
                             {heroArticle.title}
                         </h2>
-                        {heroArticle.subtitle && (
-                            <p className="text-gray-200 text-sm md:text-base line-clamp-2 max-w-2xl mb-4 font-medium opacity-90">
-                                {heroArticle.subtitle}
-                            </p>
-                        )}
-                        <button className="flex items-center gap-2 text-white font-bold text-sm bg-white/20 hover:bg-white/30 backdrop-blur-md px-5 py-2.5 rounded-full transition-all border border-white/10">
-                            Read Full Story <Icons.ArrowRight size={16} />
-                        </button>
+                        <div className="flex items-center gap-4 text-gray-300 text-xs font-bold">
+                             <span>{heroArticle.author || '91Mobiles'}</span>
+                             <span>•</span>
+                             <span>{heroArticle.timeAgo || 'Just now'}</span>
+                             <span>•</span>
+                             <span>{heroArticle.readTime || '3 min read'}</span>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Ad Banner */}
-            <AdBanner className="w-full h-24 rounded-lg" />
-
-            {/* Latest News Grid */}
-            <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                        <Icons.Rss className="text-primary" /> Latest News
-                    </h3>
-                    <a href="#" className="text-xs font-bold text-primary hover:underline uppercase flex items-center gap-1">View All <Icons.ChevronRight size={12}/></a>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {latestNews.slice(0, 4).map(item => (
+            {/* Articles List */}
+            {displayItems.length > 0 ? (
+                <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 gap-6' : 'grid-cols-1 gap-4'}`}>
+                    {displayItems.map(item => (
                         <div 
                             key={item.id} 
                             onClick={() => onArticleClick(item)}
-                            className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-card-hover transition-all group cursor-pointer flex flex-col h-full"
+                            className={`bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-card-hover hover:border-primary/30 transition-all group cursor-pointer flex ${viewMode === 'list' ? 'flex-row h-40' : 'flex-col h-full'}`}
                         >
-                            <div className="h-48 overflow-hidden relative shrink-0">
+                            <div className={`${viewMode === 'list' ? 'w-48 h-full' : 'h-48 w-full'} overflow-hidden relative shrink-0`}>
                                 <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
-                                    {item.timeAgo}
+                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm">
+                                    {item.category}
                                 </div>
                             </div>
-                            <div className="p-5 flex flex-col flex-1">
-                                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-100 leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-3">
+                            <div className="p-5 flex flex-col flex-1 relative">
+                                {item.isReview && item.rating && (
+                                     <div className="absolute top-4 right-4 bg-spec-green text-white text-[10px] font-black px-1.5 py-0.5 rounded">
+                                        {item.rating} ★
+                                     </div>
+                                )}
+                                <h4 className={`${viewMode === 'list' ? 'text-base' : 'text-lg'} font-bold text-gray-800 dark:text-gray-100 leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2`}>
                                     {item.title}
                                 </h4>
-                                <div className="mt-auto flex items-center gap-3">
-                                    <button className="text-gray-400 hover:text-primary transition-colors"><Icons.Share2 size={16} /></button>
-                                    <button className="text-gray-400 hover:text-primary transition-colors"><Icons.MessageCircle size={16} /></button>
+                                {viewMode === 'list' && item.subtitle && (
+                                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{item.subtitle}</p>
+                                )}
+                                <div className="mt-auto flex items-center justify-between text-[11px] text-gray-400 font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-600 dark:text-gray-300 font-bold">{item.author || 'Admin'}</span>
+                                        <span>•</span>
+                                        <span>{item.timeAgo || 'Just now'}</span>
+                                    </div>
+                                    <span className="flex items-center gap-1"><Icons.Clock size={10} /> {item.readTime || '5m'}</span>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
-            </section>
+            ) : (
+                <div className="py-20 text-center bg-gray-50 dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+                    <Icons.FileText className="mx-auto text-gray-300 mb-4" size={48} />
+                    <h3 className="text-lg font-bold text-gray-500">No news found</h3>
+                    <p className="text-sm text-gray-400">Try adjusting your filters or search query.</p>
+                </div>
+            )}
 
-            {/* Two Column Categories */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Smartphones */}
-                <section>
-                     <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 uppercase tracking-wide">
-                        <Icons.Smartphone className="text-blue-500" size={18} /> Smartphones
-                     </h3>
-                     <div className="space-y-4">
-                        {smartphoneNews.map(item => (
-                            <div key={item.id} onClick={() => onArticleClick(item)} className="flex gap-4 group cursor-pointer">
-                                <img src={item.image} className="w-20 h-20 rounded-lg object-cover bg-gray-100 shrink-0" alt="" />
-                                <div>
-                                    <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug group-hover:text-primary transition-colors mb-2 line-clamp-2">{item.title}</h4>
-                                    <span className="text-[10px] text-gray-400 font-bold">{item.timeAgo}</span>
-                                </div>
-                            </div>
-                        ))}
-                     </div>
-                </section>
-
-                 {/* Laptops */}
-                 <section>
-                     <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 uppercase tracking-wide">
-                        <Icons.Laptop className="text-purple-500" size={18} /> Laptops & PC
-                     </h3>
-                     <div className="space-y-4">
-                        {laptopNews.map(item => (
-                            <div key={item.id} onClick={() => onArticleClick(item)} className="flex gap-4 group cursor-pointer">
-                                <img src={item.image} className="w-20 h-20 rounded-lg object-cover bg-gray-100 shrink-0" alt="" />
-                                <div>
-                                    <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug group-hover:text-primary transition-colors mb-2 line-clamp-2">{item.title}</h4>
-                                    <span className="text-[10px] text-gray-400 font-bold">{item.timeAgo}</span>
-                                </div>
-                            </div>
-                        ))}
-                     </div>
-                </section>
-            </div>
-
-            {/* Latest Reviews Horizontal */}
-            {reviews.length > 0 && (
-                <section className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                            <Icons.Star className="text-yellow-500 fill-yellow-500" size={20} /> Latest Reviews
-                        </h3>
-                        <a href="#" className="text-xs font-bold text-gray-500 hover:text-primary">See All</a>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {reviews.map(review => (
-                            <div 
-                                key={review.id} 
-                                onClick={() => onArticleClick(review)}
-                                className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group border border-gray-100 dark:border-gray-700"
-                            >
-                                <div className="relative mb-3 rounded-lg overflow-hidden">
-                                    <img src={review.image} className="w-full aspect-square object-cover group-hover:scale-105 transition-transform" alt="" />
-                                    {review.rating && (
-                                        <div className="absolute top-2 right-2 bg-spec-green text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm">
-                                            {review.rating}/5
-                                        </div>
-                                    )}
-                                </div>
-                                <h4 className="text-xs font-bold text-center text-gray-800 dark:text-gray-200 group-hover:text-primary line-clamp-2">{review.title}</h4>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-center mt-12 gap-2">
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-inherit"
+                    >
+                        <Icons.ChevronLeft size={18} />
+                    </button>
+                    {Array.from({length: totalPages}).map((_, i) => (
+                        <button 
+                            key={i} 
+                            onClick={() => setCurrentPage(i+1)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${currentPage === i+1 ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary hover:text-primary'}`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                     <button 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-inherit"
+                    >
+                        <Icons.ChevronRight size={18} />
+                    </button>
+                </div>
             )}
           
           </div>
@@ -203,9 +251,52 @@ const NewsPage: React.FC<NewsPageProps> = ({ onArticleClick }) => {
           {/* Sidebar Column (Right) */}
           <div className="lg:col-span-4 space-y-8">
              
+             {/* Trending Now */}
+             <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <Icons.TrendingUp size={14} className="text-primary"/> Trending Now
+                </h4>
+                <ul className="space-y-5">
+                    {trendingArticles.length > 0 ? trendingArticles.map((article, i) => (
+                         <li key={article.id} onClick={() => onArticleClick(article)} className="flex gap-4 group cursor-pointer">
+                            <span className="text-2xl font-black text-gray-200 dark:text-gray-800 group-hover:text-primary/20 transition-colors leading-none mt-1">
+                                0{i+1}
+                            </span>
+                            <div>
+                                <h5 className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors leading-tight mb-1">
+                                    {article.title}
+                                </h5>
+                                <span className="text-[10px] text-gray-400 font-semibold">{article.timeAgo || 'Recent'}</span>
+                            </div>
+                        </li>
+                    )) : (
+                        <li className="text-xs text-gray-400 italic">No trending articles yet.</li>
+                    )}
+                </ul>
+             </div>
+
+             {/* Categories Widget */}
+             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Categories</h4>
+                </div>
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {categories.map(cat => (
+                        <div 
+                            key={cat.id} 
+                            onClick={() => setActiveCategory(cat.name)}
+                            className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer group transition-colors"
+                        >
+                            <span className={`text-xs font-bold ${activeCategory === cat.name ? 'text-primary' : 'text-gray-600 dark:text-gray-400'} group-hover:text-primary`}>{cat.name}</span>
+                            <span className="bg-gray-100 dark:bg-gray-800 text-[10px] font-bold px-2 py-0.5 rounded-full text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">{cat.count || 0}</span>
+                        </div>
+                    ))}
+                </div>
+             </div>
+
              {/* Social Widget */}
              <div className="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Stay Connected</h4>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Follow Us</h4>
                 <div className="grid grid-cols-4 gap-2">
                     {[
                         { icon: <Icons.Globe size={18}/>, color: "bg-blue-600", label: "FB" },
@@ -220,58 +311,8 @@ const NewsPage: React.FC<NewsPageProps> = ({ onArticleClick }) => {
                 </div>
              </div>
 
-             {/* Breaking / Don't Miss */}
-             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-                    <Icons.Flame className="text-orange-500" size={16} />
-                    <span className="text-sm font-black text-gray-800 dark:text-gray-100 uppercase">Don't Miss</span>
-                </div>
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {[1, 2, 3, 4].map((i) => (
-                        <a href="#" key={i} className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
-                             <div className="text-[10px] text-primary font-bold mb-1 uppercase">Leak</div>
-                             <h5 className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-snug group-hover:text-primary transition-colors">
-                                Samsung Galaxy Z Flip 7 to feature a larger cover display
-                             </h5>
-                        </a>
-                    ))}
-                </div>
-             </div>
-
              {/* Sidebar Ad */}
-             <AdBanner className="w-full h-64 rounded-xl" label="Sidebar Ad" />
-
-             {/* Trending List */}
-             <div className="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Icons.TrendingUp size={14} /> Trending Now
-                </h4>
-                <ul className="space-y-4">
-                    {trendingTopics.map((topic) => (
-                        <li key={topic.rank} className="flex items-center gap-4 group cursor-pointer">
-                            <span className="text-4xl font-black text-gray-100 dark:text-gray-800 group-hover:text-primary/20 transition-colors leading-none">
-                                {topic.rank}
-                            </span>
-                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">
-                                {topic.title}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-             </div>
-
-             {/* Newsletter */}
-             <div className="bg-gradient-to-br from-primary/10 to-brand-blue/10 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-primary/20 text-center">
-                 <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-primary mx-auto mb-3 shadow-md">
-                     <Icons.Mail size={24} />
-                 </div>
-                 <h4 className="font-bold text-gray-900 dark:text-white mb-1">Tech Newsletter</h4>
-                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Get the latest leaks & reviews in your inbox.</p>
-                 <div className="space-y-2">
-                     <input type="email" placeholder="Your Email Address" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm focus:border-primary outline-none" />
-                     <button className="w-full bg-primary text-white font-bold py-2 rounded-lg text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">Subscribe</button>
-                 </div>
-             </div>
+             <AdBanner className="w-full h-64 rounded-xl" label="Sidebar Ad Space" />
 
              {/* Tags Cloud */}
              <div className="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
@@ -280,7 +321,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ onArticleClick }) => {
                 </h4>
                 <div className="flex flex-wrap gap-2">
                     {tags.map(tag => (
-                        <span key={tag.id} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full hover:bg-primary hover:text-white transition-colors cursor-pointer">
+                        <span key={tag.id} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full hover:bg-primary hover:text-white transition-colors cursor-pointer border border-transparent hover:border-primary">
                             #{tag.name}
                         </span>
                     ))}
