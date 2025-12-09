@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icon';
 
@@ -268,10 +267,22 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
             <Top10MegaMenu />
           </NavItem>
           <NavItem label="Compare" onClick={() => onNavigate('compare')} hasDropdown={false} />
-          <NavItem label="Upcoming Mobiles" />
+          <NavItem 
+            label="Upcoming Mobiles" 
+            onClick={() => onSearch({ category: 'mobile', keyword: 'Coming Soon' })}
+            hasDropdown={false} 
+          />
           <NavItem label="News & Reviews" onClick={() => onNavigate('news')} hasDropdown={false} isNew={true} />
-          <NavItem label="Laptops" />
-          <NavItem label="TV" />
+          <NavItem 
+            label="Laptops" 
+            onClick={() => onSearch({ category: 'laptop' })}
+            hasDropdown={false}
+          />
+          <NavItem 
+            label="TV" 
+            onClick={() => onSearch({ category: 'tv' })}
+            hasDropdown={false}
+          />
         </nav>
 
         {/* Mobile Menu Overlay */}
@@ -310,8 +321,10 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
                     <NavItem label="Mobiles & Tablets" />
                     <NavItem label="Top 10" />
                     <NavItem label="Compare" onClick={() => { onNavigate('compare'); setIsMenuOpen(false); }} />
-                    <NavItem label="Upcoming Mobiles" />
+                    <NavItem label="Upcoming Mobiles" onClick={() => { onSearch({ category: 'mobile', keyword: 'Coming Soon' }); setIsMenuOpen(false); }} />
                     <NavItem label="News & Reviews" onClick={() => { onNavigate('news'); setIsMenuOpen(false); }} />
+                    <NavItem label="Laptops" onClick={() => { onSearch({ category: 'laptop' }); setIsMenuOpen(false); }} />
+                    <NavItem label="TVs" onClick={() => { onSearch({ category: 'tv' }); setIsMenuOpen(false); }} />
                 </div>
                 <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex flex-col">
