@@ -400,11 +400,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Filter by Keyword
     if (keyword) {
         const lowerKey = keyword.toLowerCase();
-        results = results.filter(p => 
-            p.brand?.toLowerCase().includes(lowerKey) ||
-            p.model?.toLowerCase().includes(lowerKey) ||
-            (p.brand + ' ' + p.model).toLowerCase().includes(lowerKey)
-        );
+        results = results.filter(p => {
+            const fullName = `${p.brand} ${p.model}`.toLowerCase();
+            const tagsMatch = p.tags?.some(t => t.toLowerCase().includes(lowerKey));
+            const statusMatch = p.status?.toLowerCase().includes(lowerKey);
+            
+            // Check specific attributes based on type
+            let specMatch = false;
+            
+            // Mobile Specific
+            if (p.category === 'mobile') {
+                 const m = p as MobileProduct;
+                 if (lowerKey.includes('5g') && m.sims?.some(s => s.technology?.some(t => t.toLowerCase().includes('5g')))) specMatch = true;
+                 if (lowerKey.includes('camera') && (m.main_camera?.mp && m.main_camera.mp >= 48)) specMatch = true;
+            }
+
+            return fullName.includes(lowerKey) || tagsMatch || statusMatch || specMatch;
+        });
     } else if (!category && minPrice === undefined && maxPrice === undefined) {
         return [];
     }

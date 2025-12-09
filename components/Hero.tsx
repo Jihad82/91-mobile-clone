@@ -1,8 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from './Icon';
 
 interface HeroProps {
-  onSearch: (criteria: { minPrice?: number; maxPrice?: number; keyword?: string }) => void;
+  onSearch: (criteria: { minPrice?: number; maxPrice?: number; keyword?: string; category?: string }) => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onSearch }) => {
@@ -77,6 +78,13 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
   };
 
   const handlePriceTagClick = (priceText: string) => {
+    if (priceText.toLowerCase().includes('premium') || priceText.includes('>')) {
+         setMinPrice(30000);
+         setMaxPrice(maxRange);
+         onSearch({ minPrice: 30000, maxPrice: maxRange });
+         return;
+    }
+
     const amount = parseInt(priceText.replace(/[^0-9]/g, ''), 10);
     if (priceText.toLowerCase().includes('under')) {
         setMinPrice(0);
@@ -110,7 +118,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price Range</span>
-                        <span className="text-xs font-bold text-primary">₹{minPrice.toLocaleString()} - ₹{maxPrice.toLocaleString()}</span>
+                        <span className="text-xs font-bold text-primary">BDT {minPrice.toLocaleString()} - BDT {maxPrice.toLocaleString()}</span>
                     </div>
                     
                     {/* Interactive Slider */}
@@ -140,14 +148,14 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                     </div>
                     
                     <div className="flex justify-between text-[10px] text-gray-400 font-medium px-1">
-                        <span>₹0</span>
-                        <span>₹2L+</span>
+                        <span>0</span>
+                        <span>2L+</span>
                     </div>
                  </div>
 
                  <div className="flex items-center gap-3">
                     <div className="flex-1 relative group/input">
-                    <span className="absolute left-3 top-3 text-gray-400 text-xs font-bold">₹</span>
+                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">BDT</span>
                     <input 
                         type="number" 
                         value={minPrice}
@@ -155,12 +163,12 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                             const val = Math.min(Number(e.target.value), maxPrice - minGap);
                             setMinPrice(val);
                         }}
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-6 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-9 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
                     </div>
                     <span className="text-gray-300 font-medium">-</span>
                     <div className="flex-1 relative group/input">
-                    <span className="absolute left-3 top-3 text-gray-400 text-xs font-bold">₹</span>
+                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">BDT</span>
                     <input 
                         type="number" 
                         value={maxPrice}
@@ -168,7 +176,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                              const val = Math.max(Number(e.target.value), minPrice + minGap);
                              setMaxPrice(val);
                         }}
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-6 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-9 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
                     </div>
                  </div>
@@ -208,14 +216,14 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
              {/* 1. Main Categories Grid */}
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                {[
-                  { name: "Mobiles", icon: <Icons.Smartphone />, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "hover:border-blue-200 dark:hover:border-blue-800" },
-                  { name: "Laptops", icon: <Icons.Laptop />, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20", borderColor: "hover:border-indigo-200 dark:hover:border-indigo-800" },
-                  { name: "Tablets", icon: <Icons.Tablet />, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", borderColor: "hover:border-emerald-200 dark:hover:border-emerald-800" },
-                  { name: "TVs", icon: <Icons.Tv />, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20", borderColor: "hover:border-rose-200 dark:hover:border-rose-800" }
+                  { name: "Mobiles", id: 'mobile', icon: <Icons.Smartphone />, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "hover:border-blue-200 dark:hover:border-blue-800" },
+                  { name: "Laptops", id: 'laptop', icon: <Icons.Laptop />, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20", borderColor: "hover:border-indigo-200 dark:hover:border-indigo-800" },
+                  { name: "Tablets", id: 'tablet', icon: <Icons.Tablet />, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", borderColor: "hover:border-emerald-200 dark:hover:border-emerald-800" },
+                  { name: "TVs", id: 'tv', icon: <Icons.Tv />, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20", borderColor: "hover:border-rose-200 dark:hover:border-rose-800" }
                ].map((cat, idx) => (
                   <div 
                     key={idx} 
-                    onClick={() => onSearch({ keyword: cat.name })}
+                    onClick={() => onSearch({ category: cat.id })}
                     className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 cursor-pointer transition-all duration-300 hover:shadow-card-hover bg-white dark:bg-gray-900 group hover:-translate-y-1 ${cat.borderColor}`}
                   >
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${cat.color} ${cat.bg} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
@@ -245,8 +253,8 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                         { icon: <Icons.Camera />, label: "Best Camera", keyword: "Camera", color: "text-purple-500", badge: "Hot" },
                         { icon: <Icons.Battery />, label: "Big Battery", keyword: "Battery", color: "text-green-500" },
                         { icon: <Icons.Cpu />, label: "Gaming Pro", keyword: "Pro", color: "text-red-500" }, 
-                        { icon: <Icons.Clock />, label: "Upcoming", keyword: "", color: "text-orange-500", badge: "New" },
-                        { icon: <Icons.Tablet />, label: "Top Tablets", keyword: "Tab", color: "text-teal-500" },
+                        { icon: <Icons.Clock />, label: "Upcoming", keyword: "Coming", color: "text-orange-500", badge: "New" },
+                        { icon: <Icons.Tablet />, label: "Top Tablets", keyword: "Tablet", color: "text-teal-500" },
                         ].map((item, idx) => (
                         <div 
                             key={idx} 
@@ -288,7 +296,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 h-full">
                         <div className="flex flex-wrap gap-2">
                             {[
-                                "Under ₹10,000", "Under ₹15,000", "Under ₹20,000", "Under ₹25,000", "Under ₹30,000", "Premium (>30k)"
+                                "Under 10,000", "Under 15,000", "Under 20,000", "Under 25,000", "Under 30,000", "Premium (>30k)"
                             ].map((price, idx) => (
                                 <span 
                                     key={idx} 

@@ -8,6 +8,7 @@ import MobileProductForm from './MobileProductForm';
 import LaptopProductForm from './LaptopProductForm';
 import TabletProductForm from './TabletProductForm';
 import TVProductForm from './TVProductForm';
+import { seedMobiles, seedLaptops, seedTablets, seedTVs, seedArticles } from '../data/seedData';
 
 interface AdminDashboardProps {
   onExit: () => void;
@@ -23,6 +24,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginMessage, setLoginMessage] = useState('');
+  
+  // Seed State
+  const [seedStatus, setSeedStatus] = useState<string>('');
   
   // Sub-Managers State
   const [brandForm, setBrandForm] = useState<Partial<Brand>>({});
@@ -55,6 +59,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
     const { error } = await signIn(email, password);
     if (error) setLoginMessage('Error: ' + error.message);
     else setLoginMessage('Success!');
+  };
+
+  const handleSeedData = async (type: 'all' | 'mobiles' | 'laptops' | 'articles') => {
+    setSeedStatus(`Seeding ${type}...`);
+    try {
+        if (type === 'mobiles' || type === 'all') {
+            for (const m of seedMobiles) await addMobile(m as MobileProduct);
+        }
+        if (type === 'laptops' || type === 'all') {
+            for (const l of seedLaptops) await addLaptop(l as LaptopProduct);
+        }
+        if (type === 'all') {
+            for (const t of seedTablets) await addTablet(t as TabletProduct);
+            for (const tv of seedTVs) await addTV(tv as TVProduct);
+        }
+        if (type === 'articles' || type === 'all') {
+            for (const a of seedArticles) await addArticle(a as NewsItem);
+        }
+        setSeedStatus('Seeding Completed Successfully!');
+        setTimeout(() => setSeedStatus(''), 3000);
+    } catch (error) {
+        console.error(error);
+        setSeedStatus('Error during seeding.');
+    }
   };
 
   if (!user) {
@@ -191,13 +219,53 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
         </header>
         <div className="flex-1 overflow-auto p-8">
             {view === 'dashboard' && (
-                <div className="grid grid-cols-4 gap-6">
-                    {[{l:'Mobiles', v:mobiles.length}, {l:'Articles', v:articles.length}, {l:'Authors', v:authors.length}, {l:'Categories', v:categories.length}].map((s,i) => (
-                        <div key={i} className="bg-[#1e293b] p-6 rounded-2xl border border-gray-800 text-center">
-                            <div className="text-4xl font-black text-white mb-2">{s.v}</div>
-                            <div className="text-gray-400 text-xs font-bold uppercase">{s.l}</div>
+                <div className="space-y-8">
+                    <div className="grid grid-cols-4 gap-6">
+                        {[{l:'Mobiles', v:mobiles.length}, {l:'Articles', v:articles.length}, {l:'Authors', v:authors.length}, {l:'Categories', v:categories.length}].map((s,i) => (
+                            <div key={i} className="bg-[#1e293b] p-6 rounded-2xl border border-gray-800 text-center">
+                                <div className="text-4xl font-black text-white mb-2">{s.v}</div>
+                                <div className="text-gray-400 text-xs font-bold uppercase">{s.l}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* SEED DATA SECTION */}
+                    <div className="bg-[#1e293b] rounded-2xl border border-gray-800 p-6">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Icons.Database size={24} className="text-primary" /> Seed Database</h3>
+                        <p className="text-gray-400 text-sm mb-6">Quickly populate the database with mock data for testing. Click a button to add 10-20 items to that category.</p>
+                        
+                        <div className="flex flex-wrap gap-4">
+                            <button 
+                                onClick={() => handleSeedData('mobiles')}
+                                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-bold text-sm text-white flex items-center gap-2 transition-all"
+                            >
+                                <Icons.Smartphone size={18} /> Seed Mobiles (10)
+                            </button>
+                            <button 
+                                onClick={() => handleSeedData('laptops')}
+                                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-bold text-sm text-white flex items-center gap-2 transition-all"
+                            >
+                                <Icons.Laptop size={18} /> Seed Laptops (5)
+                            </button>
+                            <button 
+                                onClick={() => handleSeedData('articles')}
+                                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-bold text-sm text-white flex items-center gap-2 transition-all"
+                            >
+                                <Icons.FileText size={18} /> Seed News (6)
+                            </button>
+                             <button 
+                                onClick={() => handleSeedData('all')}
+                                className="px-6 py-3 bg-primary hover:bg-primary-dark text-black rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-primary/20"
+                            >
+                                <Icons.Check size={18} /> Seed All Data
+                            </button>
                         </div>
-                    ))}
+                        {seedStatus && (
+                            <div className="mt-4 p-3 bg-gray-900 border border-gray-700 rounded-lg text-sm text-primary font-bold animate-pulse">
+                                {seedStatus}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
             

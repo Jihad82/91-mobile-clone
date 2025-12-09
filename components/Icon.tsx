@@ -79,7 +79,8 @@ import {
   Heading2,
   Heading3,
   Link,
-  Unlink
+  Unlink,
+  Database
 } from 'lucide-react';
 
 export const Icons = {
@@ -160,5 +161,6 @@ export const Icons = {
   Heading2,
   Heading3,
   Link,
-  Unlink
+  Unlink,
+  Database
 };
