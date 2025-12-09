@@ -116,6 +116,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
         <div className="p-6 flex items-center gap-3 text-primary border-b border-gray-800">
           <Icons.LayoutDashboard size={24} /> <span className="font-black text-xl">CMS Admin</span>
         </div>
+        
+        {/* Status Indicator */}
+        <div className="px-6 py-4">
+          <div className="bg-green-900/20 border border-green-800/50 rounded-xl p-3 flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+            <div>
+              <div className="text-[10px] text-green-400 font-bold uppercase tracking-wide">System Status</div>
+              <div className="text-xs text-white font-bold">Data Persisted</div>
+            </div>
+          </div>
+        </div>
+
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm ${view === 'dashboard' ? 'bg-primary text-gray-900' : 'text-gray-400 hover:text-white'}`}><Icons.BarChart2 size={18} /> Dashboard</button>
           

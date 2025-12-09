@@ -9,8 +9,19 @@ interface ProductSpecsPageProps {
   onNavigate: (view: string) => void;
 }
 
+interface SpecItem {
+  label: string;
+  value: string | number | boolean | undefined;
+}
+
+interface SpecSectionProps {
+  category: string;
+  items: SpecItem[];
+  defaultOpen?: boolean;
+}
+
 // Collapsible Section Component
-const SpecSection = ({ category, items, defaultOpen = false }: { category: string, items: { label: string, value: string | number | boolean | undefined }[], defaultOpen?: boolean }) => {
+const SpecSection: React.FC<SpecSectionProps> = ({ category, items, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -61,7 +72,7 @@ const ProductSpecsPage: React.FC<ProductSpecsPageProps> = ({ product, onNavigate
     ]);
 
     // Dynamic Specs Generation based on Category
-    const getSpecs = () => {
+    const getSpecs = (): SpecSectionProps[] => {
         if (fullProduct.category === 'laptop') {
             const p = fullProduct as LaptopProduct;
             return [

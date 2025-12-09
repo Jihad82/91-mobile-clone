@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product, NewsItem, Author, Category, Tag, MobileProduct, LaptopProduct, TabletProduct, TVProduct, AnyProduct } from '../types';
 
 interface SearchCriteria {
@@ -201,19 +201,39 @@ const initialTVs: TVProduct[] = [
     }
 ];
 
+// Helper to load data from localStorage or fallback
+const loadData = <T,>(key: string, initial: T): T => {
+  if (typeof window === 'undefined') return initial;
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : initial;
+  } catch (err) {
+    console.warn(`Failed to load ${key} from storage`, err);
+    return initial;
+  }
+};
+
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [articles, setArticles] = useState<NewsItem[]>(initialArticles);
-  const [mobiles, setMobiles] = useState<MobileProduct[]>(initialMobiles);
-  const [laptops, setLaptops] = useState<LaptopProduct[]>(initialLaptops);
-  const [tablets, setTablets] = useState<TabletProduct[]>(initialTablets);
-  const [tvs, setTvs] = useState<TVProduct[]>(initialTVs);
+  // Initialize state from LocalStorage to persist data
+  const [articles, setArticles] = useState<NewsItem[]>(() => loadData('cms_articles', initialArticles));
+  const [mobiles, setMobiles] = useState<MobileProduct[]>(() => loadData('cms_mobiles', initialMobiles));
+  const [laptops, setLaptops] = useState<LaptopProduct[]>(() => loadData('cms_laptops', initialLaptops));
+  const [tablets, setTablets] = useState<TabletProduct[]>(() => loadData('cms_tablets', initialTablets));
+  const [tvs, setTvs] = useState<TVProduct[]>(() => loadData('cms_tvs', initialTVs));
   const [compareList, setCompareList] = useState<Product[]>([]);
+
+  // Sync state to LocalStorage whenever it changes
+  useEffect(() => localStorage.setItem('cms_articles', JSON.stringify(articles)), [articles]);
+  useEffect(() => localStorage.setItem('cms_mobiles', JSON.stringify(mobiles)), [mobiles]);
+  useEffect(() => localStorage.setItem('cms_laptops', JSON.stringify(laptops)), [laptops]);
+  useEffect(() => localStorage.setItem('cms_tablets', JSON.stringify(tablets)), [tablets]);
+  useEffect(() => localStorage.setItem('cms_tvs', JSON.stringify(tvs)), [tvs]);
 
   // Use initial data for now
   const authors = initialAuthors;
 
   // Computed
-  const upcomingPhones = mobiles.map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: 'https://placehold.co/200x250', category: 'mobile' }));
+  const upcomingPhones = mobiles.map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: 'https://placehold.co/200x250', category: 'mobile' as const }));
   const popularPhones = upcomingPhones; // mock same
   const latestNews = articles.filter(a => a.status === 'published').slice(0, 10);
   const hindiNews = [];
@@ -248,10 +268,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const searchProducts = ({ keyword }: SearchCriteria) => {
     // Simple mock search across all categories
     const all = [
-        ...mobiles.map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: '', category: 'mobile' })),
-        ...laptops.map(l => ({ id: l.id, name: `${l.brand} ${l.model}`, price: `BDT ${l.price_bd}`, image: '', category: 'laptop' })),
-        ...tablets.map(t => ({ id: t.id, name: `${t.brand} ${t.model}`, price: `BDT ${t.price_bd}`, image: '', category: 'tablet' })),
-        ...tvs.map(t => ({ id: t.id, name: `${t.brand} ${t.model}`, price: `BDT ${t.price_bd}`, image: '', category: 'tv' }))
+        ...mobiles.map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: '', category: 'mobile' as const })),
+        ...laptops.map(l => ({ id: l.id, name: `${l.brand} ${l.model}`, price: `BDT ${l.price_bd}`, image: '', category: 'laptop' as const })),
+        ...tablets.map(t => ({ id: t.id, name: `${t.brand} ${t.model}`, price: `BDT ${t.price_bd}`, image: '', category: 'tablet' as const })),
+        ...tvs.map(t => ({ id: t.id, name: `${t.brand} ${t.model}`, price: `BDT ${t.price_bd}`, image: '', category: 'tv' as const }))
     ];
     if (!keyword) return [];
     return all.filter(p => p.name.toLowerCase().includes(keyword.toLowerCase()));

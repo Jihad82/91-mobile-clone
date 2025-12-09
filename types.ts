@@ -249,6 +249,12 @@ export interface TabletProduct {
   stylus_support: boolean;
   keyboard_support: boolean;
   os: string;
+
+  // SEO & Meta
+  slug?: string;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
 }
 
 export interface LaptopProduct {
@@ -286,6 +292,12 @@ export interface LaptopProduct {
   weight_kg: number;
   battery_whr: number;
   warranty_years: number;
+
+  // SEO & Meta
+  slug?: string;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
 }
 
 export interface TVProduct {
@@ -319,6 +331,12 @@ export interface TVProduct {
   usb_ports: number;
   wifi: boolean;
   bluetooth: boolean;
+
+  // SEO & Meta
+  slug?: string;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
 }
 
 export type AnyProduct = MobileProduct | TabletProduct | LaptopProduct | TVProduct;
