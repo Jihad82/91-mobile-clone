@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Icons } from './Icon';
@@ -21,7 +22,7 @@ const getMockSpecs = (id: string) => {
 };
 
 const CompareFloatBar = () => {
-  const { compareList, removeFromCompare, clearCompare } = useData();
+  const { compareList, removeFromCompare, clearCompare, formatPrice } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (compareList.length === 0) return null;
@@ -106,7 +107,7 @@ const CompareFloatBar = () => {
                                 </button>
                             </div>
                             <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 leading-tight h-10 overflow-hidden">{item.name}</h3>
-                            <div className="text-primary font-black text-lg">{item.price}</div>
+                            <div className="text-primary font-black text-lg">{formatPrice(item.price_bd)}</div>
                          </div>
                       </th>
                     ))}

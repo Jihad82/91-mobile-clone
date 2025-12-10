@@ -55,7 +55,7 @@ const SpecSection: React.FC<SpecSectionProps> = ({ category, items, defaultOpen 
 };
 
 const ProductSpecsPage: React.FC<ProductSpecsPageProps> = ({ product, onNavigate }) => {
-    const { mobiles, laptops, tablets, tvs, addToCompare } = useData();
+    const { mobiles, laptops, tablets, tvs, addToCompare, formatPrice } = useData();
     const [activeTab, setActiveTab] = useState('specs');
     
     // Find full product details from specific category stores
@@ -133,7 +133,7 @@ const ProductSpecsPage: React.FC<ProductSpecsPageProps> = ({ product, onNavigate
                     <div className="lg:col-span-7">
                         <div className="mb-8">
                             <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2">{(fullProduct as any).brand} {(fullProduct as any).model || product.name}</h1>
-                            <div className="text-3xl font-black text-gray-900 dark:text-white mb-4">BDT {(fullProduct as any).price_bd?.toLocaleString() || product.price}</div>
+                            <div className="text-3xl font-black text-gray-900 dark:text-white mb-4">{formatPrice((fullProduct as any).price_bd || product.price_bd)}</div>
                             <button onClick={() => addToCompare(product)} className="flex items-center gap-2 bg-primary text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-primary/30">
                                 <Icons.BarChart2 size={20} /> Compare
                             </button>

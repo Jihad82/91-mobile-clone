@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icon';
+import { useData } from '../context/DataContext';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -10,84 +11,149 @@ interface HeaderProps {
 }
 
 // Mega Menu Content Component for Mobiles & Tablets
-const MobilesMegaMenu = () => (
-  <div className="flex bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-t-2 border-primary rounded-b-xl p-6 gap-8 w-[800px] cursor-default text-left animate-slide-down ring-1 ring-black/5 dark:ring-white/5">
-    {/* Column 1: Mobiles & Features */}
-    <div className="flex-1 space-y-6">
-       <div>
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Mobiles</h4>
-         <ul className="space-y-2.5">
-           {['Phone Finder', 'Best Mobiles', 'Latest Mobiles', 'Upcoming Mobiles', 'Smartphone Benchmarks'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-       </div>
-       <div>
-         <h4 className="text-gray-800 dark:text-gray-200 font-bold text-xs uppercase mb-3 tracking-wider">Feature</h4>
-         <ul className="space-y-2.5">
-           {['5G Mobiles', 'Best Camera Phones', 'Best Gaming Phones', 'Keypad Mobiles'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-       </div>
-    </div>
-    
-    {/* Column 2: Brands */}
-    <div className="flex-1">
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Brands</h4>
-         <ul className="space-y-2.5">
-           {['Samsung Mobiles', 'Moto Mobiles', 'Vivo Mobiles', 'Realme Mobiles', 'OnePlus Mobiles', 'Xiaomi Mobiles', 'OPPO Mobiles', 'IQOO Mobiles', 'POCO Mobiles', 'Apple Mobiles', 'Nothing Mobiles'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-    </div>
+const MobilesMegaMenu = ({ onSearch }: { onSearch: (c: any) => void }) => {
+  // Approximate BDT values for the requested INR ranges (1 INR ~ 1.4 BDT)
+  // Rs 8k ~ 11.2k, Rs 12k ~ 16.8k, Rs 25k ~ 35k, Rs 10k ~ 14k, Rs 15k ~ 21k
+  const handlePriceClick = (range: string, category: 'mobile' | 'tablet' = 'mobile') => {
+      let min, max;
+      if (range === '8k-12k') { min = 11200; max = 16800; }
+      else if (range === '12k-25k') { min = 16800; max = 35000; }
+      else if (range === 'above25k') { min = 35000; }
+      else if (range === 'under10k') { max = 14000; }
+      else if (range === 'under15k') { max = 21000; }
+      
+      onSearch({ category, minPrice: min, maxPrice: max });
+  };
 
-    {/* Column 3: Price Range & Tablets */}
-    <div className="flex-1 space-y-6">
-       <div>
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Price Range</h4>
-         <ul className="space-y-2.5">
-           {['Rs. 8,000 - Rs. 12,000', 'Rs. 12,000 - Rs. 25,000', 'Above Rs. 25,000'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-       </div>
-       <div>
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Tablets</h4>
-         <ul className="space-y-2.5">
-           {['Tablet Finder', 'Samsung Tablets', 'Apple Tablets', 'Lenovo Tablets', 'Best Tablets Under 10,000', 'Best Tablets Under 15,000'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-       </div>
+  return (
+    <div className="flex bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-t-2 border-primary rounded-b-xl p-6 gap-8 w-[800px] cursor-default text-left animate-slide-down ring-1 ring-black/5 dark:ring-white/5">
+      {/* Column 1: Mobiles & Features */}
+      <div className="flex-1 space-y-6">
+        <div>
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Mobiles</h4>
+          <ul className="space-y-2.5">
+            {[
+              { label: 'Phone Finder', action: () => onSearch({ category: 'mobile' }) },
+              { label: 'Best Mobiles', action: () => onSearch({ category: 'mobile', keyword: 'Best' }) },
+              { label: 'Latest Mobiles', action: () => onSearch({ category: 'mobile' }) },
+              { label: 'Upcoming Mobiles', action: () => onSearch({ category: 'mobile', keyword: 'Coming Soon' }) },
+              { label: 'Smartphone Benchmarks', action: () => onSearch({ category: 'mobile' }) }
+            ].map(item => (
+              <li key={item.label}>
+                <a onClick={(e) => { e.preventDefault(); item.action(); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-gray-800 dark:text-gray-200 font-bold text-xs uppercase mb-3 tracking-wider">Feature</h4>
+          <ul className="space-y-2.5">
+            {[
+              { label: '5G Mobiles', action: () => onSearch({ category: 'mobile', keyword: '5G' }) },
+              { label: 'Best Camera Phones', action: () => onSearch({ category: 'mobile', keyword: 'Camera' }) },
+              { label: 'Best Gaming Phones', action: () => onSearch({ category: 'mobile', keyword: 'Gaming' }) },
+              { label: 'Keypad Mobiles', action: () => onSearch({ category: 'mobile', keyword: 'Feature Phone' }) }
+            ].map(item => (
+              <li key={item.label}>
+                <a onClick={(e) => { e.preventDefault(); item.action(); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      
+      {/* Column 2: Brands */}
+      <div className="flex-1">
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Brands</h4>
+          <ul className="space-y-2.5">
+            {['Samsung', 'Moto', 'Vivo', 'Realme', 'OnePlus', 'Xiaomi', 'OPPO', 'IQOO', 'POCO', 'Apple', 'Nothing'].map(brand => (
+              <li key={brand}>
+                <a onClick={(e) => { e.preventDefault(); onSearch({ category: 'mobile', keyword: brand }); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{brand} Mobiles</a>
+              </li>
+            ))}
+          </ul>
+      </div>
+
+      {/* Column 3: Price Range & Tablets */}
+      <div className="flex-1 space-y-6">
+        <div>
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Price Range</h4>
+          <ul className="space-y-2.5">
+            {[
+              { label: 'Rs. 8,000 - Rs. 12,000', action: () => handlePriceClick('8k-12k') },
+              { label: 'Rs. 12,000 - Rs. 25,000', action: () => handlePriceClick('12k-25k') },
+              { label: 'Above Rs. 25,000', action: () => handlePriceClick('above25k') }
+            ].map(item => (
+              <li key={item.label}>
+                <a onClick={(e) => { e.preventDefault(); item.action(); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Tablets</h4>
+          <ul className="space-y-2.5">
+            {[
+              { label: 'Tablet Finder', action: () => onSearch({ category: 'tablet' }) },
+              { label: 'Samsung Tablets', action: () => onSearch({ category: 'tablet', keyword: 'Samsung' }) },
+              { label: 'Apple Tablets', action: () => onSearch({ category: 'tablet', keyword: 'Apple' }) },
+              { label: 'Lenovo Tablets', action: () => onSearch({ category: 'tablet', keyword: 'Lenovo' }) },
+              { label: 'Best Tablets Under 10,000', action: () => handlePriceClick('under10k', 'tablet') },
+              { label: 'Best Tablets Under 15,000', action: () => handlePriceClick('under15k', 'tablet') }
+            ].map(item => (
+              <li key={item.label}>
+                <a onClick={(e) => { e.preventDefault(); item.action(); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Top 10 Mega Menu Component
-const Top10MegaMenu = () => (
-  <div className="flex bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-t-2 border-primary rounded-b-xl p-6 gap-8 w-[500px] cursor-default text-left animate-slide-down ring-1 ring-black/5 dark:ring-white/5">
-    {/* Column 1: Categories */}
-    <div className="flex-1">
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Categories</h4>
-         <ul className="space-y-2.5">
-           {['Best Mobiles', 'Best Tablets', 'Best Laptops', 'Best TVs'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
-    </div>
+const Top10MegaMenu = ({ onSearch }: { onSearch: (c: any) => void }) => {
+  const handlePriceClick = (max: number) => {
+      // Assuming 'Under' X amount
+      // Convert INR to BDT approx
+      const maxBDT = max * 1.4;
+      onSearch({ category: 'mobile', maxPrice: maxBDT });
+  };
 
-    {/* Column 2: Best Phones By Prices */}
-    <div className="flex-1">
-         <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Best Phones By Prices</h4>
-         <ul className="space-y-2.5">
-           {['Best Phones Under 10,000', 'Best Phones Under 12,000', 'Best Phones Under 15,000', 'Best Phones Under 20,000', 'Best Phones Under 25,000', 'Best Phones Under 30,000'].map(item => (
-             <li key={item}><a href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item}</a></li>
-           ))}
-         </ul>
+  return (
+    <div className="flex bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-t-2 border-primary rounded-b-xl p-6 gap-8 w-[500px] cursor-default text-left animate-slide-down ring-1 ring-black/5 dark:ring-white/5">
+      {/* Column 1: Categories */}
+      <div className="flex-1">
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Categories</h4>
+          <ul className="space-y-2.5">
+            {[
+              { label: 'Best Mobiles', cat: 'mobile' },
+              { label: 'Best Tablets', cat: 'tablet' },
+              { label: 'Best Laptops', cat: 'laptop' },
+              { label: 'Best TVs', cat: 'tv' }
+            ].map(item => (
+              <li key={item.label}>
+                <a onClick={(e) => { e.preventDefault(); onSearch({ category: item.cat }); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">{item.label}</a>
+              </li>
+            ))}
+          </ul>
+      </div>
+
+      {/* Column 2: Best Phones By Prices */}
+      <div className="flex-1">
+          <h4 className="text-primary font-bold text-xs uppercase mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 tracking-wider">Best Phones By Prices</h4>
+          <ul className="space-y-2.5">
+            {[10000, 12000, 15000, 20000, 25000, 30000].map(price => (
+              <li key={price}>
+                <a onClick={(e) => { e.preventDefault(); handlePriceClick(price); }} href="#" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:translate-x-1 transition-all duration-200">Best Phones Under {price.toLocaleString()}</a>
+              </li>
+            ))}
+          </ul>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface NavItemProps {
   label: string;
@@ -121,6 +187,7 @@ const NavItem = ({ label, hasDropdown = true, isNew = false, children, onClick }
 );
 
 const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onNavigate }) => {
+  const { currency, setCurrency } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('any');
@@ -234,7 +301,20 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-6 ml-6">
+          <div className="flex items-center gap-4 ml-6">
+             {/* Currency Switcher */}
+             <div className="hidden sm:block">
+                 <select 
+                    value={currency} 
+                    onChange={(e) => setCurrency(e.target.value as any)}
+                    className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 px-3 rounded-lg cursor-pointer outline-none hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-r-8 border-transparent"
+                 >
+                    <option value="BDT">BDT ৳</option>
+                    <option value="INR">INR ₹</option>
+                    <option value="USD">USD $</option>
+                 </select>
+             </div>
+
              <button 
                onClick={toggleDarkMode} 
                className="p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all hover:scale-110 active:scale-95"
@@ -261,10 +341,10 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
         {/* Navigation Bar - Desktop */}
         <nav className="hidden lg:flex items-center border-t border-gray-100/50 dark:border-gray-800/50 -mx-4 px-4 relative z-40">
           <NavItem label="Mobiles & Tablets">
-            <MobilesMegaMenu />
+            <MobilesMegaMenu onSearch={onSearch} />
           </NavItem>
           <NavItem label="Top 10">
-            <Top10MegaMenu />
+            <Top10MegaMenu onSearch={onSearch} />
           </NavItem>
           <NavItem label="Compare" onClick={() => onNavigate('compare')} hasDropdown={false} />
           <NavItem 
@@ -317,9 +397,21 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onSearch, onN
                         </div>
                     </div>
                 </div>
+                <div className="flex justify-between items-center mb-2 px-1">
+                   <span className="text-sm font-bold text-gray-500">Currency</span>
+                   <select 
+                      value={currency} 
+                      onChange={(e) => setCurrency(e.target.value as any)}
+                      className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold py-1 px-2 rounded outline-none"
+                   >
+                      <option value="BDT">BDT ৳</option>
+                      <option value="INR">INR ₹</option>
+                      <option value="USD">USD $</option>
+                   </select>
+                </div>
                 <div className="flex flex-col gap-1">
-                    <NavItem label="Mobiles & Tablets" />
-                    <NavItem label="Top 10" />
+                    <NavItem label="Mobiles & Tablets" onClick={() => { onSearch({ category: 'mobile' }); setIsMenuOpen(false); }}/>
+                    <NavItem label="Top 10" onClick={() => { onSearch({ keyword: 'Best' }); setIsMenuOpen(false); }}/>
                     <NavItem label="Compare" onClick={() => { onNavigate('compare'); setIsMenuOpen(false); }} />
                     <NavItem label="Upcoming Mobiles" onClick={() => { onSearch({ category: 'mobile', keyword: 'Coming Soon' }); setIsMenuOpen(false); }} />
                     <NavItem label="News & Reviews" onClick={() => { onNavigate('news'); setIsMenuOpen(false); }} />

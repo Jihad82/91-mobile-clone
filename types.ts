@@ -6,6 +6,7 @@ export interface Product {
   image: string;
   specScore?: number;
   category?: 'mobile' | 'laptop' | 'tablet' | 'tv';
+  price_bd?: number;
 }
 
 export interface Author {

@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { Product, NewsItem, Author, Category, Tag, MobileProduct, LaptopProduct, TabletProduct, TVProduct, AnyProduct, Brand, CollectionItem } from '../types';
 
+export type Currency = 'BDT' | 'INR' | 'USD';
+
 export interface SearchCriteria {
   minPrice?: number;
   maxPrice?: number;
@@ -85,6 +87,13 @@ interface DataContextType {
   removeFromCompare: (id: string) => void;
   clearCompare: () => void;
 
+  // Currency
+  currency: Currency;
+  setCurrency: (c: Currency) => void;
+  formatPrice: (price: number | undefined) => string;
+  convertPriceToBDT: (price: number) => number;
+  convertPriceFromBDT: (price: number) => number;
+
   // Auth
   user: User | null;
   signIn: (email: string, password?: string) => Promise<{ error: any }>;
@@ -110,6 +119,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Currency State
+  const [currency, setCurrency] = useState<Currency>('BDT');
+
+  const exchangeRates = {
+    BDT: 1,
+    INR: 0.71,
+    USD: 0.0085
+  };
+
+  const currencySymbols = {
+    BDT: '৳',
+    INR: '₹',
+    USD: '$'
+  };
+
+  const convertPriceFromBDT = (price: number) => {
+     return Math.round(price * exchangeRates[currency]);
+  };
+
+  const convertPriceToBDT = (price: number) => {
+     return Math.round(price / exchangeRates[currency]);
+  };
+
+  const formatPrice = (price: number | undefined) => {
+    if (price === undefined || price === null) return 'N/A';
+    const converted = convertPriceFromBDT(price);
+    return `${currencySymbols[currency]} ${converted.toLocaleString()}`;
+  };
 
   // Initialize Auth & Data
   useEffect(() => {
@@ -362,8 +400,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 
   // Computed & Utils
-  const upcomingPhones = mobiles.filter(m => m.status === 'Coming Soon').map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: m.images?.[0]?.url || 'https://placehold.co/200x250', category: 'mobile' as const }));
-  const popularPhones = mobiles.filter(m => m.status === 'Available').slice(0, 10).map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: `BDT ${m.price_bd}`, image: m.images?.[0]?.url || 'https://placehold.co/200x250', category: 'mobile' as const }));
+  const upcomingPhones = mobiles.filter(m => m.status === 'Coming Soon').map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: formatPrice(m.price_bd), price_bd: m.price_bd, image: m.images?.[0]?.url || 'https://placehold.co/200x250', category: 'mobile' as const }));
+  const popularPhones = mobiles.filter(m => m.status === 'Available').slice(0, 10).map(m => ({ id: m.id, name: `${m.brand} ${m.model}`, price: formatPrice(m.price_bd), price_bd: m.price_bd, image: m.images?.[0]?.url || 'https://placehold.co/200x250', category: 'mobile' as const }));
   
   const latestNews = articles.filter(a => a.status === 'published').sort((a,b) => new Date(b.publishedAt || '').getTime() - new Date(a.publishedAt || '').getTime()).slice(0, 10);
   const hindiNews = articles.filter(a => a.tags?.includes('Hindi')).slice(0, 5);
@@ -382,7 +420,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         results = results.filter(p => p.category === category);
     }
 
-    // Filter by Price Range
+    // Filter by Price Range (Inputs are expected to be in BDT if converted properly, or we handle conversion here if passed as currency value?)
+    // Decision: The search component should pass BDT values to this function.
     if (minPrice !== undefined) {
         results = results.filter(p => {
              const price = typeof p.price_bd === 'number' ? p.price_bd : parseInt(String(p.price_bd || '0').replace(/[^0-9]/g, ''), 10);
@@ -413,6 +452,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                  const m = p as MobileProduct;
                  if (lowerKey.includes('5g') && m.sims?.some(s => s.technology?.some(t => t.toLowerCase().includes('5g')))) specMatch = true;
                  if (lowerKey.includes('camera') && (m.main_camera?.mp && m.main_camera.mp >= 48)) specMatch = true;
+                 if (m.device_type?.toLowerCase().includes(lowerKey)) specMatch = true;
             }
 
             return fullName.includes(lowerKey) || tagsMatch || statusMatch || specMatch;
@@ -424,7 +464,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return results.map(p => ({
         id: p.id,
         name: `${p.brand} ${p.model}`,
-        price: `BDT ${p.price_bd?.toLocaleString()}`,
+        price: formatPrice(p.price_bd),
+        price_bd: p.price_bd,
         image: p.images?.[0]?.url || 'https://placehold.co/200x250',
         category: p.category,
         specScore: (p as any).spec_score 
@@ -456,6 +497,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addCategory, updateCategory, deleteCategory,
       addTag, deleteTag,
       searchProducts, compareList, addToCompare, removeFromCompare, clearCompare,
+      currency, setCurrency, formatPrice, convertPriceToBDT, convertPriceFromBDT,
       user, signIn, signOut, isLoading
     }}>
       {children}

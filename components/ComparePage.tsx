@@ -21,7 +21,7 @@ const getMockSpecs = (id: string) => {
 };
 
 const ComparePage = () => {
-  const { compareList, addToCompare, removeFromCompare, searchProducts, clearCompare } = useData();
+  const { compareList, addToCompare, removeFromCompare, searchProducts, clearCompare, formatPrice } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -112,7 +112,7 @@ const ComparePage = () => {
                                             <img src={product.image} alt={product.name} className="w-12 h-12 object-contain" />
                                             <div>
                                                 <div className="font-bold text-gray-800 dark:text-gray-100 text-sm">{product.name}</div>
-                                                <div className="text-primary font-bold text-xs">{product.price}</div>
+                                                <div className="text-primary font-bold text-xs">{formatPrice(product.price_bd)}</div>
                                             </div>
                                             <div className="ml-auto">
                                                 <Icons.Plus size={18} className="text-gray-400" />
@@ -158,7 +158,7 @@ const ComparePage = () => {
                                         
                                         <div className="text-center w-full">
                                             <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm line-clamp-2 mb-2 h-10">{product.name}</h3>
-                                            <div className="text-lg font-black text-primary">{product.price}</div>
+                                            <div className="text-lg font-black text-primary">{formatPrice(product.price_bd)}</div>
                                             {product.specScore && (
                                                 <div className="mt-2 inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                                     Score: <span className="text-gray-900 dark:text-gray-200">{product.specScore}</span>
@@ -230,7 +230,7 @@ const ComparePage = () => {
                                             <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain drop-shadow-md" />
                                         </div>
                                         <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 leading-tight">{item.name}</h3>
-                                        <div className="text-primary font-black text-lg mb-2">{item.price}</div>
+                                        <div className="text-primary font-black text-lg mb-2">{formatPrice(item.price_bd)}</div>
                                         <button 
                                             onClick={() => removeFromCompare(item.id)}
                                             className="text-xs text-red-500 hover:underline font-medium"

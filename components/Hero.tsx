@@ -1,22 +1,26 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from './Icon';
+import { useData } from '../context/DataContext';
 
 interface HeroProps {
   onSearch: (criteria: { minPrice?: number; maxPrice?: number; keyword?: string; category?: string }) => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onSearch }) => {
-  const [minPrice, setMinPrice] = useState(10000);
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const { currency, convertPriceFromBDT, convertPriceToBDT, formatPrice } = useData();
+
+  // Internal State stores Base Currency (BDT)
+  const [minPriceBDT, setMinPriceBDT] = useState(10000);
+  const [maxPriceBDT, setMaxPriceBDT] = useState(50000);
   
   // Slider Drag State
   const [isDraggingMin, setIsDraggingMin] = useState(false);
   const [isDraggingMax, setIsDraggingMax] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
   
-  const maxRange = 200000;
-  const minGap = 1000;
+  const maxRangeBDT = 200000;
+  const minGapBDT = 1000;
 
   // Handle Dragging
   useEffect(() => {
@@ -27,18 +31,18 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
       const rect = sliderRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-      let newValue = Math.round((percentage / 100) * maxRange);
+      let newValue = Math.round((percentage / 100) * maxRangeBDT);
       
       // Snap to nearest 500
       newValue = Math.round(newValue / 500) * 500;
 
       if (isDraggingMin) {
-        if (newValue <= maxPrice - minGap) {
-          setMinPrice(newValue);
+        if (newValue <= maxPriceBDT - minGapBDT) {
+          setMinPriceBDT(newValue);
         }
       } else if (isDraggingMax) {
-        if (newValue >= minPrice + minGap) {
-          setMaxPrice(newValue);
+        if (newValue >= minPriceBDT + minGapBDT) {
+          setMaxPriceBDT(newValue);
         }
       }
     };
@@ -63,14 +67,14 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
-  }, [isDraggingMin, isDraggingMax, minPrice, maxPrice]);
+  }, [isDraggingMin, isDraggingMax, minPriceBDT, maxPriceBDT]);
 
   // Calculate positions for rendering
-  const minPos = Math.min((minPrice / maxRange) * 100, 100);
-  const maxPos = Math.min((maxPrice / maxRange) * 100, 100);
+  const minPos = Math.min((minPriceBDT / maxRangeBDT) * 100, 100);
+  const maxPos = Math.min((maxPriceBDT / maxRangeBDT) * 100, 100);
 
   const handlePriceSearch = () => {
-    onSearch({ minPrice, maxPrice });
+    onSearch({ minPrice: minPriceBDT, maxPrice: maxPriceBDT });
   };
 
   const handleFeatureClick = (feature: string) => {
@@ -79,16 +83,18 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
 
   const handlePriceTagClick = (priceText: string) => {
     if (priceText.toLowerCase().includes('premium') || priceText.includes('>')) {
-         setMinPrice(30000);
-         setMaxPrice(maxRange);
-         onSearch({ minPrice: 30000, maxPrice: maxRange });
+         const min = 30000;
+         const max = maxRangeBDT;
+         setMinPriceBDT(min);
+         setMaxPriceBDT(max);
+         onSearch({ minPrice: min, maxPrice: max });
          return;
     }
 
     const amount = parseInt(priceText.replace(/[^0-9]/g, ''), 10);
     if (priceText.toLowerCase().includes('under')) {
-        setMinPrice(0);
-        setMaxPrice(amount);
+        setMinPriceBDT(0);
+        setMaxPriceBDT(amount);
         onSearch({ minPrice: 0, maxPrice: amount });
     }
   };
@@ -118,7 +124,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price Range</span>
-                        <span className="text-xs font-bold text-primary">BDT {minPrice.toLocaleString()} - BDT {maxPrice.toLocaleString()}</span>
+                        <span className="text-xs font-bold text-primary">{formatPrice(minPriceBDT)} - {formatPrice(maxPriceBDT)}</span>
                     </div>
                     
                     {/* Interactive Slider */}
@@ -148,33 +154,35 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
                     </div>
                     
                     <div className="flex justify-between text-[10px] text-gray-400 font-medium px-1">
-                        <span>0</span>
-                        <span>2L+</span>
+                        <span>{formatPrice(0)}</span>
+                        <span>{formatPrice(200000)}+</span>
                     </div>
                  </div>
 
                  <div className="flex items-center gap-3">
                     <div className="flex-1 relative group/input">
-                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">BDT</span>
+                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">{currency}</span>
                     <input 
                         type="number" 
-                        value={minPrice}
+                        value={convertPriceFromBDT(minPriceBDT)}
                         onChange={(e) => {
-                            const val = Math.min(Number(e.target.value), maxPrice - minGap);
-                            setMinPrice(val);
+                            const val = convertPriceToBDT(Number(e.target.value));
+                            const safeVal = Math.min(val, maxPriceBDT - minGapBDT);
+                            setMinPriceBDT(Math.max(0, safeVal));
                         }}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-9 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
                     </div>
                     <span className="text-gray-300 font-medium">-</span>
                     <div className="flex-1 relative group/input">
-                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">BDT</span>
+                    <span className="absolute left-3 top-3 text-gray-400 text-[10px] font-bold mt-0.5">{currency}</span>
                     <input 
                         type="number" 
-                        value={maxPrice}
+                        value={convertPriceFromBDT(maxPriceBDT)}
                         onChange={(e) => {
-                             const val = Math.max(Number(e.target.value), minPrice + minGap);
-                             setMaxPrice(val);
+                             const val = convertPriceToBDT(Number(e.target.value));
+                             const safeVal = Math.max(val, minPriceBDT + minGapBDT);
+                             setMaxPriceBDT(safeVal);
                         }}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pl-9 text-sm font-bold text-gray-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" 
                     />
