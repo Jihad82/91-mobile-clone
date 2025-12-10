@@ -115,9 +115,9 @@ const MobilesMegaMenu = ({ onSearch }: { onSearch: (c: any) => void }) => {
 // Top 10 Mega Menu Component
 const Top10MegaMenu = ({ onSearch }: { onSearch: (c: any) => void }) => {
   const handlePriceClick = (max: number) => {
-      // Assuming 'Under' X amount
-      // Convert INR to BDT approx
-      const maxBDT = max * 1.4;
+      // Assuming 'Under' X amount in INR
+      // Convert INR to BDT approx (1 INR ~ 1.41 BDT)
+      const maxBDT = max * 1.41;
       onSearch({ category: 'mobile', maxPrice: maxBDT });
   };
 
