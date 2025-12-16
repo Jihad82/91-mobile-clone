@@ -80,7 +80,10 @@ import {
   Heading3,
   Link,
   Unlink,
-  Database
+  Database,
+  Lock,
+  Zap,
+  DollarSign
 } from 'lucide-react';
 
 export const Icons = {
@@ -162,5 +165,8 @@ export const Icons = {
   Heading3,
   Link,
   Unlink,
-  Database
+  Database,
+  Lock,
+  Zap,
+  DollarSign
 };

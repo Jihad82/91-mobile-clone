@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Icons } from './Icon';
@@ -209,7 +210,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
           <button onClick={() => setView('brands')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm ${view === 'brands' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}><Icons.Tag size={18} /> Brands</button>
           <button onClick={() => setView('collections')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm ${view === 'collections' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}><Icons.Layers size={18} /> Deep Dive</button>
         </nav>
-        <div className="p-4 border-t border-gray-800"><button onClick={() => { signOut(); onExit(); }} className="flex gap-2 text-gray-400 font-bold px-4 py-2 w-full justify-center hover:text-white hover:bg-gray-800 rounded">Sign Out</button></div>
+        <div className="p-4 border-t border-gray-800">
+            <button onClick={() => { signOut(); onExit(); }} className="flex gap-2 text-gray-400 font-bold px-4 py-2 w-full justify-center hover:text-white hover:bg-gray-800 rounded">Sign Out</button>
+            <div className="flex justify-center mt-4">
+                <Icons.Lock size={14} className="text-gray-700 opacity-50" />
+            </div>
+        </div>
       </aside>
 
       {/* Main Content */}
